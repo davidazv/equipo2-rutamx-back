@@ -10,3 +10,4 @@ target/
 .project
 .settings/
 src/main/resources/rutamx-firebase-adminsdk.json
+.env

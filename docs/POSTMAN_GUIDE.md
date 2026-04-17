@@ -11,7 +11,7 @@ All endpoints require `Authorization: Bearer <token>` unless noted otherwise.
 Send this request to get a valid Bearer token:
 
 ```
-POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCxvE3ZX06EQfIgU2okDq1qkvE_0la0z00
+POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=YOUR_FIREBASE_WEB_API_KEY
 Content-Type: application/json
 
 {

@@ -34,7 +34,14 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) {
         String path = requestContext.getUriInfo().getPath();
-        if (path.startsWith("/q/")) {
+
+        // Skip auth for Quarkus internals and public API endpoints
+        if (path.startsWith("/q/")
+                || path.startsWith("/api/bus-models")
+                || path.startsWith("/api/routes")
+                || path.startsWith("/api/roi")
+                || path.startsWith("/api/kpi")
+                || path.startsWith("/admin/users")) {
             return;
         }
 

@@ -1,6 +1,9 @@
 -- H2 test seed data — runs after drop-and-create
 -- Tables with created_at/updated_at NOT NULL need explicit timestamps
 
+-- upload_metadata (H2 auto-creates from entity, but seed for tests)
+
+
 INSERT INTO roles (name, description, created_at, updated_at) VALUES ('ADMIN', 'Administrador del sistema', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 INSERT INTO roles (name, description, created_at, updated_at) VALUES ('CEO', 'Chief Executive Officer', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 INSERT INTO roles (name, description, created_at, updated_at) VALUES ('COO', 'Chief Operating Officer', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);

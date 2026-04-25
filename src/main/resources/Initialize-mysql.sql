@@ -262,6 +262,17 @@ CREATE INDEX idx_afluencia_anio  ON afluencia_metrobus (anio);
 
 
 
+-- ────────────────────────────────────────────────────────────────────────────
+-- 13. UPLOAD_METADATA
+--     Tracks last CSV upload timestamp per table
+-- ────────────────────────────────────────────────────────────────────────────
+CREATE TABLE upload_metadata (
+    table_name  VARCHAR(50) NOT NULL,
+    uploaded_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (table_name)
+) ENGINE=InnoDB;
+
 -- Roles
 INSERT INTO roles (name, description) VALUES
   ('ADMIN', 'Administrador del sistema'),

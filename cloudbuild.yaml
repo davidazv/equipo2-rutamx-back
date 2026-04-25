@@ -1,0 +1,21 @@
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back:$SHORT_SHA'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back:latest'
+      - '.'
+
+  # Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back'
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back:latest'

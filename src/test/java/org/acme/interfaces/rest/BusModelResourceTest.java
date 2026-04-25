@@ -39,4 +39,31 @@ class BusModelResourceTest {
                 .then()
                 .statusCode(404);
     }
+
+    @Test
+    void getShouldReturnDieselModelWithCorrectFuelType() {
+        given()
+                .when().get("/api/bus-models/4")
+                .then()
+                .statusCode(200)
+                .body("name", equalTo("Yutong DMT Hybrid H8"))
+                .body("fuelType", equalTo("DIESEL"));
+    }
+
+    @Test
+    void getShouldReturnAllFieldsForBusModel() {
+        given()
+                .when().get("/api/bus-models/1")
+                .then()
+                .statusCode(200)
+                .body("name", notNullValue())
+                .body("manufacturer", notNullValue())
+                .body("fuelType", notNullValue())
+                .body("autonomyKm", notNullValue())
+                .body("passengerCapacity", notNullValue())
+                .body("unitCostUsd", notNullValue())
+                .body("batteryCapacityKwh", notNullValue())
+                .body("energyConsumptionKwhKm", notNullValue())
+                .body("maintenanceCostPerKm", notNullValue());
+    }
 }

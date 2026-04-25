@@ -80,4 +80,55 @@ class RoiResourceTest {
                 .then()
                 .statusCode(400);
     }
+
+    @Test
+    void estimateShouldReturn400WhenModelIdMissing() {
+        given()
+                .queryParam("routeId", "TR13")
+                .queryParam("buses", 10)
+                .when().get("/api/roi/estimate")
+                .then()
+                .statusCode(400)
+                .body(containsString("modelId es requerido"));
+    }
+
+    @Test
+    void estimateShouldReturn400WhenBusesIsNegative() {
+        given()
+                .queryParam("routeId", "TR13")
+                .queryParam("modelId", 1)
+                .queryParam("buses", -5)
+                .when().get("/api/roi/estimate")
+                .then()
+                .statusCode(400)
+                .body(containsString("al menos 1"));
+    }
+
+    @Test
+    void estimateShouldReturn400WhenRouteIdIsEmpty() {
+        given()
+                .queryParam("routeId", "")
+                .queryParam("modelId", 1)
+                .queryParam("buses", 10)
+                .when().get("/api/roi/estimate")
+                .then()
+                .statusCode(400)
+                .body(containsString("routeId es requerido"));
+    }
+
+    @Test
+    void estimateShouldReturn200WithDifferentElectricModel() {
+        given()
+                .queryParam("routeId", "TR13")
+                .queryParam("modelId", 2)
+                .queryParam("buses", 5)
+                .when().get("/api/roi/estimate")
+                .then()
+                .statusCode(200)
+                .body("roiPercent", notNullValue())
+                .body("paybackYears", greaterThan(0.0f))
+                .body("netAnnualReturn", greaterThan(0.0f))
+                .body("totalInvestmentMXN", greaterThan(0.0f))
+                .body("co2AvoidedTons", greaterThan(0.0f));
+    }
 }

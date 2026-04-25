@@ -16,6 +16,9 @@ steps:
       - '--all-tags'
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back'
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back:$SHORT_SHA'
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back:latest'

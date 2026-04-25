@@ -113,7 +113,8 @@ load_csv "bus_models" "bus_models.csv" \
 
 # 2. agency (no FK, natural PK)
 echo "  [2/10] agency"
-load_csv "agency" "agency.csv" ""
+load_csv "agency" "agency.csv" \
+  "agency_id, agency_name, agency_url, agency_timezone, agency_lang, agency_color"
 
 # 3. calendar (no FK, natural PK)
 echo "  [3/10] calendar"

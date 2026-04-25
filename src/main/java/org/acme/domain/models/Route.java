@@ -7,6 +7,8 @@ public class Route {
     private String routeShortName;
     private String routeLongName;
     private Integer routeType;
+    private String routeColor;
+    private String routeTextColor;
     private Double distanceKm;
 
     public Route() {}
@@ -25,6 +27,12 @@ public class Route {
 
     public Integer getRouteType() { return routeType; }
     public void setRouteType(Integer routeType) { this.routeType = routeType; }
+
+    public String getRouteColor() { return routeColor; }
+    public void setRouteColor(String routeColor) { this.routeColor = routeColor; }
+
+    public String getRouteTextColor() { return routeTextColor; }
+    public void setRouteTextColor(String routeTextColor) { this.routeTextColor = routeTextColor; }
 
     public Double getDistanceKm() { return distanceKm; }
     public void setDistanceKm(Double distanceKm) { this.distanceKm = distanceKm; }

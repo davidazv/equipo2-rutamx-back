@@ -3,12 +3,14 @@ package org.acme.infrastructure.repository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import org.acme.domain.models.BusModel;
 import org.acme.domain.models.FuelType;
 import org.acme.domain.repository.BusModelRepository;
 import org.acme.infrastructure.entities.BusModelEntity;
 import org.acme.infrastructure.mapper.BusModelMapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,5 +47,28 @@ public class BusModelRepositoryImpl implements BusModelRepository {
                 .stream()
                 .map(BusModelMapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void deleteAll() {
+        entityManager.createQuery("DELETE FROM BusModelEntity").executeUpdate();
+    }
+
+    @Override
+    @Transactional
+    public int createAll(List<BusModel> items) {
+        int count = 0;
+        for (BusModel item : items) {
+            BusModelEntity entity = BusModelMapper.toEntity(item);
+            entity.setCreatedAt(LocalDateTime.now());
+            entity.setUpdatedAt(LocalDateTime.now());
+            entityManager.persist(entity);
+            if (++count % 50 == 0) {
+                entityManager.flush();
+                entityManager.clear();
+            }
+        }
+        return count;
     }
 }

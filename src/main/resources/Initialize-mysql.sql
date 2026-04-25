@@ -99,6 +99,7 @@ CREATE TABLE agency (
     agency_url      VARCHAR(255)  NULL,
     agency_timezone VARCHAR(50)   NOT NULL,
     agency_lang     VARCHAR(10)   NULL,
+    agency_color    VARCHAR(10)   NULL,
 
     PRIMARY KEY (agency_id)
 ) ENGINE=InnoDB;

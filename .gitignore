@@ -1,0 +1,14 @@
+target/
+.DS_Store
+.idea/
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+.classpath
+.project
+.settings/
+src/main/resources/rutamx-firebase-adminsdk.json
+.env
+

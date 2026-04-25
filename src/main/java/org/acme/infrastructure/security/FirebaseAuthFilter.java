@@ -37,10 +37,12 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
 
         // Skip auth for Quarkus internals and public API endpoints
         if (path.startsWith("/q/")
+                || path.startsWith("/api/agencies")
                 || path.startsWith("/api/bus-models")
                 || path.startsWith("/api/routes")
                 || path.startsWith("/api/roi")
                 || path.startsWith("/api/kpi")
+                || path.startsWith("/api/energy-consumption")
                 || path.startsWith("/admin/users")) {
             return;
         }

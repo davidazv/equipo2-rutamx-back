@@ -67,4 +67,50 @@ class RouteResourceTest {
                 .statusCode(200)
                 .body("distanceKm", equalTo(20.0f));
     }
+
+    @Test
+    void getShapesShouldReturnRoutesWithCoordinates() {
+        given()
+                .when().get("/api/routes/shapes")
+                .then()
+                .statusCode(200)
+                .body("$.size()", equalTo(2))
+                .body("[0].routeId", notNullValue())
+                .body("[0].coordinates", notNullValue())
+                .body("[0].coordinates.size()", greaterThanOrEqualTo(2))
+                .body("[0].distanceKm", greaterThan(0.0f));
+    }
+
+    @Test
+    void getShapesByAgencyShouldFilterRoutes() {
+        given()
+                .queryParam("agencyId", "SEMOVI")
+                .when().get("/api/routes/shapes")
+                .then()
+                .statusCode(200)
+                .body("$.size()", equalTo(1))
+                .body("[0].routeId", equalTo("TR13"))
+                .body("[0].agencyId", equalTo("SEMOVI"));
+    }
+
+    @Test
+    void getShapesByUnknownAgencyShouldReturnEmpty() {
+        given()
+                .queryParam("agencyId", "NONEXISTENT")
+                .when().get("/api/routes/shapes")
+                .then()
+                .statusCode(200)
+                .body("$.size()", equalTo(0));
+    }
+
+    @Test
+    void getShapesShouldReturnTr13With4Points() {
+        given()
+                .when().get("/api/routes/shapes")
+                .then()
+                .statusCode(200)
+                .body("find { it.routeId == 'TR13' }.coordinates.size()", equalTo(4))
+                .body("find { it.routeId == 'TR13' }.distanceKm", equalTo(20.0f))
+                .body("find { it.routeId == 'TR13' }.routeShortName", equalTo("13"));
+    }
 }

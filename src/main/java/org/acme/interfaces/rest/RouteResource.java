@@ -28,6 +28,15 @@ public class RouteResource {
     }
 
     @GET
+    @Path("/shapes")
+    public Response listRoutesWithShapes(@QueryParam("agencyId") String agencyId) {
+        if (agencyId != null && !agencyId.isBlank()) {
+            return Response.ok(routeRepository.findByAgencyWithShapes(agencyId)).build();
+        }
+        return Response.ok(routeRepository.findAllWithShapes()).build();
+    }
+
+    @GET
     @Path("/{routeId}")
     public Response getRoute(@PathParam("routeId") String routeId) {
         return routeRepository.findByIdWithDistance(routeId)

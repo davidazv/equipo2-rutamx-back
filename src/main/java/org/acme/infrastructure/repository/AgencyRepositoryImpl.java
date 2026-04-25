@@ -11,9 +11,11 @@ import org.acme.infrastructure.entities.AgencyEntity;
 import org.acme.infrastructure.mapper.AgencyMapper;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -66,6 +68,14 @@ public class AgencyRepositoryImpl implements AgencyRepository {
         }
 
         return new ArrayList<>(map.values());
+    }
+
+    @Override
+    public Set<String> findAllIds() {
+        List<String> ids = entityManager
+                .createQuery("SELECT a.agencyId FROM AgencyEntity a", String.class)
+                .getResultList();
+        return new HashSet<>(ids);
     }
 
     @Override

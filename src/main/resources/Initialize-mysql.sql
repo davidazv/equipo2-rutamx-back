@@ -172,7 +172,7 @@ CREATE TABLE trips (
     service_id      VARCHAR(50)   NOT NULL,
     shape_id        VARCHAR(50)   NULL,
     trip_headsign   VARCHAR(150)  NULL,
-    trip_short_name VARCHAR(50)   NULL,
+    trip_short_name VARCHAR(150)  NULL,
     direction_id    TINYINT       NULL,
 
     PRIMARY KEY (trip_id),

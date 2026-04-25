@@ -22,6 +22,9 @@ public class AgencyEntity {
     @Column(name = "agency_lang", length = 10)
     private String agencyLang;
 
+    @Column(name = "agency_color", length = 10)
+    private String agencyColor;
+
     public AgencyEntity() {}
 
     public String getAgencyId() { return agencyId; }
@@ -38,4 +41,7 @@ public class AgencyEntity {
 
     public String getAgencyLang() { return agencyLang; }
     public void setAgencyLang(String agencyLang) { this.agencyLang = agencyLang; }
+
+    public String getAgencyColor() { return agencyColor; }
+    public void setAgencyColor(String agencyColor) { this.agencyColor = agencyColor; }
 }

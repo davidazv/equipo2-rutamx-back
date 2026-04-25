@@ -17,8 +17,8 @@ INSERT INTO bus_models (name, manufacturer, fuel_type, autonomy_km, passenger_ca
 INSERT INTO bus_models (name, manufacturer, fuel_type, autonomy_km, passenger_capacity, unit_cost_usd, battery_capacity_kwh, energy_consumption_kwh_km, fuel_consumption_l_km, maintenance_cost_per_km, co2_emissions_g_km, created_at, updated_at) VALUES ('Yutong DMT Hybrid H12', 'Yutong', 'DIESEL', 700, 87, 200000, 0.0, 0.0, 0.35, 0.22, 940, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- GTFS seed data for route distance computation (HU05)
-INSERT INTO agency (agency_id, agency_name, agency_url, agency_timezone, agency_lang) VALUES ('SEMOVI', 'SEMOVI', 'https://semovi.cdmx.gob.mx/', 'America/Mexico_City', 'es');
-INSERT INTO agency (agency_id, agency_name, agency_url, agency_timezone, agency_lang) VALUES ('TROLE', 'Servicio de Transportes Electricos', 'https://www.ste.cdmx.gob.mx/', 'America/Mexico_City', 'es');
+INSERT INTO agency (agency_id, agency_name, agency_url, agency_timezone, agency_lang, agency_color) VALUES ('SEMOVI', 'SEMOVI', 'https://semovi.cdmx.gob.mx/', 'America/Mexico_City', 'es', '009B3A');
+INSERT INTO agency (agency_id, agency_name, agency_url, agency_timezone, agency_lang, agency_color) VALUES ('TROLE', 'Servicio de Transportes Electricos', 'https://www.ste.cdmx.gob.mx/', 'America/Mexico_City', 'es', '1F5AF0');
 
 INSERT INTO calendar (service_id, monday, tuesday, wednesday, thursday, friday, saturday, sunday, start_date, end_date) VALUES ('TR13_SERVICE', 1, 1, 1, 1, 1, 1, 1, '2026-01-01', '2026-12-31');
 INSERT INTO calendar (service_id, monday, tuesday, wednesday, thursday, friday, saturday, sunday, start_date, end_date) VALUES ('B_0', 1, 1, 1, 1, 1, 1, 1, '2024-12-01', '2025-12-31');

@@ -4,6 +4,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.acme.application.usecase.ListAgenciesWithColorsUseCase;
 import org.acme.domain.repository.AgencyRepository;
 
 @Path("/api/agencies")
@@ -12,14 +13,23 @@ import org.acme.domain.repository.AgencyRepository;
 public class AgencyResource {
 
     private final AgencyRepository agencyRepository;
+    private final ListAgenciesWithColorsUseCase listAgenciesWithColorsUseCase;
 
     @Inject
-    public AgencyResource(AgencyRepository agencyRepository) {
+    public AgencyResource(AgencyRepository agencyRepository,
+                          ListAgenciesWithColorsUseCase listAgenciesWithColorsUseCase) {
         this.agencyRepository = agencyRepository;
+        this.listAgenciesWithColorsUseCase = listAgenciesWithColorsUseCase;
     }
 
     @GET
     public Response listAgencies() {
         return Response.ok(agencyRepository.findAll()).build();
+    }
+
+    @GET
+    @Path("/with-colors")
+    public Response listAgenciesWithColors() {
+        return Response.ok(listAgenciesWithColorsUseCase.execute()).build();
     }
 }

@@ -3,9 +3,12 @@ package org.acme.infrastructure.repository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import org.acme.domain.models.Route;
 import org.acme.domain.models.RouteGeometry;
 import org.acme.domain.repository.RouteRepository;
+import org.acme.infrastructure.entities.AgencyEntity;
+import org.acme.infrastructure.entities.RouteEntity;
 import org.acme.infrastructure.mapper.RouteMapper;
 
 import java.math.BigDecimal;
@@ -149,5 +152,28 @@ public class RouteRepositoryImpl implements RouteRepository {
                 : ((Number) row[5]).doubleValue();
 
         return RouteMapper.toDomain(routeId, agencyId, shortName, longName, routeType, distanceKm);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAll() {
+        entityManager.createQuery("DELETE FROM RouteEntity").executeUpdate();
+    }
+
+    @Override
+    @Transactional
+    public int createAll(List<Route> items) {
+        int count = 0;
+        for (Route item : items) {
+            RouteEntity entity = RouteMapper.toEntity(item);
+            AgencyEntity agency = entityManager.getReference(AgencyEntity.class, item.getAgencyId());
+            entity.setAgency(agency);
+            entityManager.persist(entity);
+            if (++count % 200 == 0) {
+                entityManager.flush();
+                entityManager.clear();
+            }
+        }
+        return count;
     }
 }

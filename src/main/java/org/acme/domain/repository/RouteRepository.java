@@ -11,4 +11,6 @@ public interface RouteRepository {
     Optional<Route> findByIdWithDistance(String routeId);
     List<RouteGeometry> findAllWithShapes();
     List<RouteGeometry> findByAgencyWithShapes(String agencyId);
+    void deleteAll();
+    int createAll(List<Route> items);
 }

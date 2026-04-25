@@ -11,6 +11,21 @@ public class AgencyMapper {
         Agency agency = new Agency();
         agency.setAgencyId(entity.getAgencyId());
         agency.setAgencyName(entity.getAgencyName());
+        agency.setAgencyUrl(entity.getAgencyUrl());
+        agency.setAgencyTimezone(entity.getAgencyTimezone());
+        agency.setAgencyLang(entity.getAgencyLang());
+        agency.setAgencyColor(entity.getAgencyColor());
         return agency;
+    }
+
+    public static AgencyEntity toEntity(Agency agency) {
+        AgencyEntity entity = new AgencyEntity();
+        entity.setAgencyId(agency.getAgencyId());
+        entity.setAgencyName(agency.getAgencyName());
+        entity.setAgencyUrl(agency.getAgencyUrl());
+        entity.setAgencyTimezone(agency.getAgencyTimezone());
+        entity.setAgencyLang(agency.getAgencyLang());
+        entity.setAgencyColor(agency.getAgencyColor());
+        return entity;
     }
 }

@@ -10,4 +10,6 @@ public interface BusModelRepository {
     List<BusModel> findAll();
     Optional<BusModel> findById(Long id);
     List<BusModel> findByFuelType(FuelType fuelType);
+    void deleteAll();
+    int createAll(List<BusModel> items);
 }

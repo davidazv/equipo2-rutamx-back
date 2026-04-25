@@ -104,6 +104,30 @@ class RouteResourceTest {
     }
 
     @Test
+    void getShapesByBlankAgencyShouldReturnAllRoutes() {
+        given()
+                .queryParam("agencyId", "  ")
+                .when().get("/api/routes/shapes")
+                .then()
+                .statusCode(200)
+                .body("$.size()", equalTo(2));
+    }
+
+    @Test
+    void getShouldReturnRouteWithAllFields() {
+        given()
+                .when().get("/api/routes/TR13")
+                .then()
+                .statusCode(200)
+                .body("routeId", equalTo("TR13"))
+                .body("agencyId", equalTo("SEMOVI"))
+                .body("routeShortName", equalTo("13"))
+                .body("routeLongName", equalTo("Trolebus Linea 13"))
+                .body("routeType", equalTo(11))
+                .body("distanceKm", equalTo(20.0f));
+    }
+
+    @Test
     void getShapesShouldReturnTr13With4Points() {
         given()
                 .when().get("/api/routes/shapes")

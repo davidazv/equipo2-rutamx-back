@@ -134,6 +134,116 @@ class EnergyConsumptionResourceTest {
     }
 
     @Test
+    void shouldReturnCorrectCalculationValuesAt50Percent() {
+        given()
+                .queryParam("routeId", "TR13")
+                .queryParam("busModelId", 1)
+                .queryParam("occupancyPercent", 50)
+                .when().get("/api/energy-consumption")
+                .then()
+                .statusCode(200)
+                // TR13 = 20km, model 1 = 1.0 kWh/km, 352.08 kWh, 85 passengers
+                // occupancyFactor = 1 + (50/100) * 0.003 * 85 = 1.1275
+                // totalFactor = 1.1275 * 1.15 * 1.1 = 1.426225
+                // consumption = 20 * 1.0 * 1.426225 = 28.5245 → 28.5
+                .body("estimatedConsumptionKwh", equalTo(28.5f))
+                .body("canCompleteRoute", equalTo(true))
+                .body("routeDistanceKm", equalTo(20.0f))
+                .body("busModelName", equalTo("Yutong E12PRO"));
+    }
+
+    @Test
+    void shouldReturnAllResponseFields() {
+        given()
+                .queryParam("routeId", "TR13")
+                .queryParam("busModelId", 1)
+                .queryParam("occupancyPercent", 50)
+                .when().get("/api/energy-consumption")
+                .then()
+                .statusCode(200)
+                .body("routeId", notNullValue())
+                .body("routeDistanceKm", notNullValue())
+                .body("busModelId", notNullValue())
+                .body("busModelName", notNullValue())
+                .body("occupancyPercent", notNullValue())
+                .body("estimatedConsumptionKwh", notNullValue())
+                .body("batteryPercentAfter", notNullValue())
+                .body("remainingRangeKm", notNullValue())
+                .body("canCompleteRoute", notNullValue());
+    }
+
+    @Test
+    void shouldWorkWithDifferentElectricBusModel() {
+        // busModelId=2: Yutong ZK5120C, 127.51 kWh, 1.0 kWh/km, 85 passengers
+        given()
+                .queryParam("routeId", "TR13")
+                .queryParam("busModelId", 2)
+                .queryParam("occupancyPercent", 50)
+                .when().get("/api/energy-consumption")
+                .then()
+                .statusCode(200)
+                .body("busModelId", equalTo(2))
+                .body("busModelName", equalTo("Yutong ZK5120C"))
+                .body("estimatedConsumptionKwh", greaterThan(0.0f))
+                .body("canCompleteRoute", notNullValue());
+    }
+
+    @Test
+    void shouldWorkWithHighCapacityBusModel() {
+        // busModelId=3: Yutong ZK5180C, 155.33 kWh, 1.3 kWh/km, 140 passengers
+        given()
+                .queryParam("routeId", "TR13")
+                .queryParam("busModelId", 3)
+                .queryParam("occupancyPercent", 75)
+                .when().get("/api/energy-consumption")
+                .then()
+                .statusCode(200)
+                .body("busModelId", equalTo(3))
+                .body("estimatedConsumptionKwh", greaterThan(0.0f));
+    }
+
+    @Test
+    void shouldReturnCanCompleteAtZeroOccupancy() {
+        given()
+                .queryParam("routeId", "TR13")
+                .queryParam("busModelId", 1)
+                .queryParam("occupancyPercent", 0)
+                .when().get("/api/energy-consumption")
+                .then()
+                .statusCode(200)
+                .body("occupancyPercent", equalTo(0))
+                .body("canCompleteRoute", equalTo(true));
+    }
+
+    @Test
+    void shouldReturnCanCompleteAt100Occupancy() {
+        given()
+                .queryParam("routeId", "TR13")
+                .queryParam("busModelId", 1)
+                .queryParam("occupancyPercent", 100)
+                .when().get("/api/energy-consumption")
+                .then()
+                .statusCode(200)
+                .body("occupancyPercent", equalTo(100))
+                .body("canCompleteRoute", equalTo(true));
+    }
+
+    @Test
+    void shouldWorkWithTestRoute() {
+        // TEST_ROUTE = 15km
+        given()
+                .queryParam("routeId", "TEST_ROUTE")
+                .queryParam("busModelId", 1)
+                .queryParam("occupancyPercent", 50)
+                .when().get("/api/energy-consumption")
+                .then()
+                .statusCode(200)
+                .body("routeId", equalTo("TEST_ROUTE"))
+                .body("routeDistanceKm", equalTo(15.0f))
+                .body("estimatedConsumptionKwh", greaterThan(0.0f));
+    }
+
+    @Test
     void shouldIncreaseConsumptionWithHigherOccupancy() {
         float lowOccConsumption = given()
                 .queryParam("routeId", "TR13")

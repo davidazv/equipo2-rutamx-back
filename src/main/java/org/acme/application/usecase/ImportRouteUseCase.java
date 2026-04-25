@@ -3,14 +3,17 @@ package org.acme.application.usecase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.acme.domain.models.Agency;
 import org.acme.domain.models.CsvImportResult;
 import org.acme.domain.models.Route;
+import org.acme.domain.repository.AgencyRepository;
 import org.acme.domain.repository.FrequencyRepository;
 import org.acme.domain.repository.RouteRepository;
 import org.acme.domain.repository.StopTimeRepository;
 import org.acme.domain.repository.TripRepository;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,6 +25,7 @@ public class ImportRouteUseCase {
     private final TripRepository tripRepository;
     private final StopTimeRepository stopTimeRepository;
     private final FrequencyRepository frequencyRepository;
+    private final AgencyRepository agencyRepository;
     private final RouteColorAssigner routeColorAssigner;
     private final CsvParser csvParser;
 
@@ -30,12 +34,14 @@ public class ImportRouteUseCase {
                               TripRepository tripRepository,
                               StopTimeRepository stopTimeRepository,
                               FrequencyRepository frequencyRepository,
+                              AgencyRepository agencyRepository,
                               RouteColorAssigner routeColorAssigner,
                               CsvParser csvParser) {
         this.routeRepository = routeRepository;
         this.tripRepository = tripRepository;
         this.stopTimeRepository = stopTimeRepository;
         this.frequencyRepository = frequencyRepository;
+        this.agencyRepository = agencyRepository;
         this.routeColorAssigner = routeColorAssigner;
         this.csvParser = csvParser;
     }
@@ -51,6 +57,7 @@ public class ImportRouteUseCase {
 
         List<Route> routes = result.getItems();
         assignMissingColors(routes);
+        createMissingAgencies(routes);
 
         frequencyRepository.deleteAll();
         stopTimeRepository.deleteAll();
@@ -60,6 +67,28 @@ public class ImportRouteUseCase {
         int imported = routeRepository.createAll(routes);
         return new CsvImportResult("routes", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());
+    }
+
+    private void createMissingAgencies(List<Route> routes) {
+        Set<String> existingIds = agencyRepository.findAllIds();
+        Set<String> seen = new HashSet<>();
+        List<Agency> toCreate = new ArrayList<>();
+
+        for (Route route : routes) {
+            String agencyId = route.getAgencyId();
+            if (agencyId != null && !existingIds.contains(agencyId) && seen.add(agencyId)) {
+                Agency placeholder = new Agency();
+                placeholder.setAgencyId(agencyId);
+                placeholder.setAgencyName(agencyId);
+                placeholder.setAgencyTimezone("America/Mexico_City");
+                placeholder.setAgencyLang("es");
+                toCreate.add(placeholder);
+            }
+        }
+
+        if (!toCreate.isEmpty()) {
+            agencyRepository.createAll(toCreate);
+        }
     }
 
     private void assignMissingColors(List<Route> routes) {

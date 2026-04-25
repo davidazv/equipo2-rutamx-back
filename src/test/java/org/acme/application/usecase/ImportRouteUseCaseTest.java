@@ -2,6 +2,7 @@ package org.acme.application.usecase;
 
 import org.acme.domain.models.CsvImportResult;
 import org.acme.domain.models.Route;
+import org.acme.domain.repository.AgencyRepository;
 import org.acme.domain.repository.FrequencyRepository;
 import org.acme.domain.repository.RouteRepository;
 import org.acme.domain.repository.StopTimeRepository;
@@ -16,7 +17,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -27,6 +30,7 @@ class ImportRouteUseCaseTest {
     private TripRepository tripRepository;
     private StopTimeRepository stopTimeRepository;
     private FrequencyRepository frequencyRepository;
+    private AgencyRepository agencyRepository;
     private RouteColorAssigner routeColorAssigner;
     private CsvParser csvParser;
     private ImportRouteUseCase useCase;
@@ -37,10 +41,13 @@ class ImportRouteUseCaseTest {
         tripRepository = mock(TripRepository.class);
         stopTimeRepository = mock(StopTimeRepository.class);
         frequencyRepository = mock(FrequencyRepository.class);
+        agencyRepository = mock(AgencyRepository.class);
         routeColorAssigner = mock(RouteColorAssigner.class);
         csvParser = mock(CsvParser.class);
+        when(agencyRepository.findAllIds()).thenReturn(Set.of("AGENCY1"));
         useCase = new ImportRouteUseCase(routeRepository, tripRepository,
-                stopTimeRepository, frequencyRepository, routeColorAssigner, csvParser);
+                stopTimeRepository, frequencyRepository, agencyRepository,
+                routeColorAssigner, csvParser);
     }
 
     @Test

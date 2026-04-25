@@ -172,7 +172,7 @@ CREATE TABLE trips (
     service_id      VARCHAR(50)   NOT NULL,
     shape_id        VARCHAR(50)   NULL,
     trip_headsign   VARCHAR(150)  NULL,
-    trip_short_name VARCHAR(50)   NULL,
+    trip_short_name VARCHAR(150)  NULL,
     direction_id    TINYINT       NULL,
 
     PRIMARY KEY (trip_id),
@@ -261,6 +261,17 @@ CREATE INDEX idx_afluencia_linea ON afluencia_metrobus (linea);
 CREATE INDEX idx_afluencia_anio  ON afluencia_metrobus (anio);
 
 
+
+-- ────────────────────────────────────────────────────────────────────────────
+-- 13. UPLOAD_METADATA
+--     Tracks last CSV upload timestamp per table
+-- ────────────────────────────────────────────────────────────────────────────
+CREATE TABLE upload_metadata (
+    table_name  VARCHAR(50) NOT NULL,
+    uploaded_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (table_name)
+) ENGINE=InnoDB;
 
 -- Roles
 INSERT INTO roles (name, description) VALUES

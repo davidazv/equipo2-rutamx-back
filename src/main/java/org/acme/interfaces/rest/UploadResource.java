@@ -1,12 +1,19 @@
 package org.acme.interfaces.rest;
 
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.application.usecase.*;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
+import jakarta.transaction.Transactional;
+
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 @Path("/admin/upload")
@@ -14,6 +21,9 @@ import java.util.logging.Logger;
 public class UploadResource {
 
     private static final Logger log = Logger.getLogger(UploadResource.class.getName());
+
+    @Inject
+    EntityManager entityManager;
 
     private final ImportAgencyUseCase importAgencyUseCase;
     private final ImportBusModelUseCase importBusModelUseCase;
@@ -53,6 +63,7 @@ public class UploadResource {
     @POST
     @Path("/agency")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
     public Response uploadAgency(@MultipartForm UploadForm form) {
         return executeUpload("agency", form, importAgencyUseCase::execute);
     }
@@ -60,6 +71,7 @@ public class UploadResource {
     @POST
     @Path("/bus-models")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
     public Response uploadBusModels(@MultipartForm UploadForm form) {
         return executeUpload("bus-models", form, importBusModelUseCase::execute);
     }
@@ -67,6 +79,7 @@ public class UploadResource {
     @POST
     @Path("/calendar")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
     public Response uploadCalendar(@MultipartForm UploadForm form) {
         return executeUpload("calendar", form, importCalendarUseCase::execute);
     }
@@ -74,6 +87,7 @@ public class UploadResource {
     @POST
     @Path("/routes")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
     public Response uploadRoutes(@MultipartForm UploadForm form) {
         return executeUpload("routes", form, importRouteUseCase::execute);
     }
@@ -81,6 +95,7 @@ public class UploadResource {
     @POST
     @Path("/stops")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
     public Response uploadStops(@MultipartForm UploadForm form) {
         return executeUpload("stops", form, importStopUseCase::execute);
     }
@@ -88,6 +103,7 @@ public class UploadResource {
     @POST
     @Path("/trips")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
     public Response uploadTrips(@MultipartForm UploadForm form) {
         return executeUpload("trips", form, importTripUseCase::execute);
     }
@@ -95,6 +111,7 @@ public class UploadResource {
     @POST
     @Path("/stop-times")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
     public Response uploadStopTimes(@MultipartForm UploadForm form) {
         return executeUpload("stop-times", form, importStopTimeUseCase::execute);
     }
@@ -102,6 +119,7 @@ public class UploadResource {
     @POST
     @Path("/shapes")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
     public Response uploadShapes(@MultipartForm UploadForm form) {
         return executeUpload("shapes", form, importShapeUseCase::execute);
     }
@@ -109,6 +127,7 @@ public class UploadResource {
     @POST
     @Path("/frequencies")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
     public Response uploadFrequencies(@MultipartForm UploadForm form) {
         return executeUpload("frequencies", form, importFrequencyUseCase::execute);
     }
@@ -116,8 +135,51 @@ public class UploadResource {
     @POST
     @Path("/afluencia")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
     public Response uploadAfluencia(@MultipartForm UploadForm form) {
         return executeUpload("afluencia", form, importAfluenciaUseCase::execute);
+    }
+
+    @GET
+    @Path("/status")
+    public Response getTableStatus() {
+        String[] keys = {"agency", "calendar", "stops", "bus-models", "shapes",
+                "afluencia", "routes", "trips", "stop-times", "frequencies"};
+        String[] dbTables = {"agency", "calendar", "stops", "bus_models", "shapes",
+                "afluencia_metrobus", "routes", "trips", "stop_times", "frequencies"};
+
+        Map<String, String> timestamps = loadTimestamps();
+
+        Map<String, Map<String, Object>> result = new LinkedHashMap<>();
+        for (int i = 0; i < keys.length; i++) {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("rowCount", countTable(dbTables[i]));
+            entry.put("uploadedAt", timestamps.get(keys[i]));
+            result.put(keys[i], entry);
+        }
+        return Response.ok(result).build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, String> loadTimestamps() {
+        List<Object[]> rows = entityManager
+                .createNativeQuery("SELECT table_name, uploaded_at FROM upload_metadata")
+                .getResultList();
+        Map<String, String> map = new LinkedHashMap<>();
+        for (Object[] row : rows) {
+            map.put((String) row[0], row[1].toString());
+        }
+        return map;
+    }
+
+    private long countTable(String tableName) {
+        try {
+            return ((Number) entityManager
+                    .createNativeQuery("SELECT COUNT(*) FROM " + tableName)
+                    .getSingleResult()).longValue();
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     private Response executeUpload(String tableName, UploadForm form, ImportUseCase useCase) {
@@ -125,7 +187,14 @@ public class UploadResource {
             return Response.status(400).entity("Archivo requerido").build();
         }
         try {
-            return Response.ok(useCase.execute(form.file)).build();
+            var result = useCase.execute(form.file);
+            entityManager.createNativeQuery(
+                    "INSERT INTO upload_metadata (table_name, uploaded_at) VALUES (?1, ?2) " +
+                    "ON DUPLICATE KEY UPDATE uploaded_at = ?2")
+                    .setParameter(1, tableName)
+                    .setParameter(2, java.sql.Timestamp.from(Instant.now()))
+                    .executeUpdate();
+            return Response.ok(result).build();
         } catch (Exception e) {
             log.severe("Error uploading " + tableName + ": " + e.getMessage());
             return Response.serverError().entity("Error al importar " + tableName + ": " + e.getMessage()).build();

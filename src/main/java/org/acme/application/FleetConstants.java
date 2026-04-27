@@ -17,4 +17,8 @@ public final class FleetConstants {
     public static final double TERRAIN_FACTOR = 1.15;
     public static final double AC_FACTOR = 1.1;
     public static final double MIN_BATTERY_PERCENT = 10.0;
+
+    public static final double PEAK_HOUR_FACTOR = 0.12;
+    public static final int DEFAULT_BUS_CAPACITY = 80;
+    public static final double DEFAULT_OCCUPANCY = 0.80;
 }

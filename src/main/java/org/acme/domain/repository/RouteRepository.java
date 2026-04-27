@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface RouteRepository {
     List<Route> findAllWithDistance();
     Optional<Route> findByIdWithDistance(String routeId);
+    Optional<Route> findByAgencyAndShortName(String agencyId, String routeShortName);
     List<RouteGeometry> findAllWithShapes();
     List<RouteGeometry> findByAgencyWithShapes(String agencyId);
     void deleteAll();

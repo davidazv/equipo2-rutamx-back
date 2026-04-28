@@ -15,8 +15,8 @@ class AgencyResourceTest {
                 .when().get("/api/agencies")
                 .then()
                 .statusCode(200)
-                .body("$.size()", equalTo(2))
-                .body("agencyId", hasItems("SEMOVI", "TROLE"))
+                .body("$.size()", equalTo(3))
+                .body("agencyId", hasItems("SEMOVI", "TROLE", "MB"))
                 .body("agencyName", hasItems("SEMOVI", "Servicio de Transportes Electricos"));
     }
 
@@ -48,7 +48,7 @@ class AgencyResourceTest {
                 .when().get("/api/agencies/with-colors")
                 .then()
                 .statusCode(200)
-                .body("$.size()", equalTo(2));
+                .body("$.size()", equalTo(3));
     }
 
     @Test

@@ -46,7 +46,7 @@ class RouteResourceTest {
                 .when().get("/api/routes")
                 .then()
                 .statusCode(200)
-                .body("$.size()", equalTo(2));
+                .body("$.size()", equalTo(3));
     }
 
     @Test
@@ -74,7 +74,7 @@ class RouteResourceTest {
                 .when().get("/api/routes/shapes")
                 .then()
                 .statusCode(200)
-                .body("$.size()", equalTo(2))
+                .body("$.size()", equalTo(3))
                 .body("[0].routeId", notNullValue())
                 .body("[0].coordinates", notNullValue())
                 .body("[0].coordinates.size()", greaterThanOrEqualTo(2))
@@ -110,7 +110,7 @@ class RouteResourceTest {
                 .when().get("/api/routes/shapes")
                 .then()
                 .statusCode(200)
-                .body("$.size()", equalTo(2));
+                .body("$.size()", equalTo(3));
     }
 
     @Test

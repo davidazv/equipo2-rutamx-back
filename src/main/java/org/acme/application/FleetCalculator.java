@@ -43,4 +43,8 @@ public final class FleetCalculator {
     public static double energyConsumptionKwh(double distanceKm, double baseConsumptionKwhKm, double totalFactor) {
         return distanceKm * baseConsumptionKwhKm * totalFactor;
     }
+
+    public static double dieselLitersPerYear(int buses, double kmPerYear, double fuelConsumptionLKm) {
+        return buses * kmPerYear * fuelConsumptionLKm;
+    }
 }

@@ -7,7 +7,6 @@ import org.acme.domain.models.ModelRecommendation;
 import org.acme.domain.models.Route;
 import org.acme.domain.repository.AfluenciaMetrobusRepository;
 import org.acme.domain.repository.BusModelRepository;
-import org.acme.domain.repository.FrequencyRepository;
 import org.acme.domain.repository.RouteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,6 @@ import static org.mockito.Mockito.*;
 class RecommendBusModelUseCaseTest {
 
     private AfluenciaMetrobusRepository afluenciaRepository;
-    private FrequencyRepository frequencyRepository;
     private RouteRepository routeRepository;
     private BusModelRepository busModelRepository;
     private RecommendBusModelUseCase useCase;
@@ -31,11 +29,10 @@ class RecommendBusModelUseCaseTest {
     @BeforeEach
     void setUp() {
         afluenciaRepository = mock(AfluenciaMetrobusRepository.class);
-        frequencyRepository = mock(FrequencyRepository.class);
         routeRepository = mock(RouteRepository.class);
         busModelRepository = mock(BusModelRepository.class);
         useCase = new RecommendBusModelUseCase(
-                afluenciaRepository, frequencyRepository, routeRepository, busModelRepository);
+                afluenciaRepository, routeRepository, busModelRepository);
     }
 
     // -------------------------------------------------------------------------
@@ -68,13 +65,11 @@ class RecommendBusModelUseCaseTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void executeShouldReturnRecommendationWhenValidInput() {
-        // demand=5000, headway=300s -> busesPerHour=12, peakHour=600
-        // requiredCap = CEIL(600 / (12 * 0.80)) = CEIL(62.5) = 63
+    void executeShouldReturnRecommendationWithExplicitFleetSize() {
+        // demand=5000, peakHour=600, fleetSize=10, occ=0.80
+        // requiredCap = CEIL(600 / (10 * 0.80)) = CEIL(75) = 75
         when(afluenciaRepository.findAverageDailyDemand("linea 1", WEEKDAY))
                 .thenReturn(new BigDecimal("5000"));
-        when(frequencyRepository.findAverageHeadwayByRouteShortName("1"))
-                .thenReturn(300.0);
         when(routeRepository.findByAgencyAndShortName("MB", "1"))
                 .thenReturn(Optional.of(buildRoute("route-1", 30)));
 
@@ -83,9 +78,10 @@ class RecommendBusModelUseCaseTest {
         when(busModelRepository.findByFuelType(FuelType.ELECTRIC))
                 .thenReturn(List.of(large, small));
 
-        ModelRecommendation result = useCase.execute("linea 1", "weekday", 80);
+        ModelRecommendation result = useCase.execute("linea 1", "weekday", 80, 10);
 
-        assertEquals(63, result.getRequiredCapacity());
+        assertEquals(75, result.getRequiredCapacity());
+        // large (cap=85 >= 75) eligible, small (cap=50 < 75) not
         assertEquals(1, result.getModels().size());
         assertEquals(1L, result.getModels().get(0).getId());
     }
@@ -94,25 +90,17 @@ class RecommendBusModelUseCaseTest {
     void executeShouldThrowWhenNoDataForLinea() {
         when(afluenciaRepository.findAverageDailyDemand("linea 1", WEEKDAY))
                 .thenReturn(null);
-        when(frequencyRepository.findAverageHeadwayByRouteShortName("1"))
-                .thenReturn(300.0);
-        when(routeRepository.findByAgencyAndShortName("MB", "1"))
-                .thenReturn(Optional.empty());
-        when(busModelRepository.findByFuelType(FuelType.ELECTRIC))
-                .thenReturn(List.of());
 
         assertThrows(DemandNotFoundException.class,
-                () -> useCase.execute("linea 1", "weekday", 80));
+                () -> useCase.execute("linea 1", "weekday", 80, 10));
     }
 
     @Test
     void executeShouldReturnEmptyModelsWhenNoneEligible() {
-        // demand=100000 -> peakHour=12000, headway=300 -> busesPerHour=12
-        // requiredCap = CEIL(12000 / (12 * 0.80)) = CEIL(1250) = 1250 -> all models too small
+        // demand=100000, peakHour=12000, fleetSize=5
+        // requiredCap = CEIL(12000 / (5 * 0.80)) = 3000 -> model cap 50 too small
         when(afluenciaRepository.findAverageDailyDemand("linea 1", WEEKDAY))
                 .thenReturn(new BigDecimal("100000"));
-        when(frequencyRepository.findAverageHeadwayByRouteShortName("1"))
-                .thenReturn(300.0);
         when(routeRepository.findByAgencyAndShortName("MB", "1"))
                 .thenReturn(Optional.of(buildRoute("route-1", 30)));
 
@@ -120,18 +108,16 @@ class RecommendBusModelUseCaseTest {
         when(busModelRepository.findByFuelType(FuelType.ELECTRIC))
                 .thenReturn(List.of(small));
 
-        ModelRecommendation result = useCase.execute("linea 1", "weekday", 80);
+        ModelRecommendation result = useCase.execute("linea 1", "weekday", 80, 5);
 
         assertTrue(result.getModels().isEmpty());
     }
 
     @Test
     void executeShouldMarkCheapestEligibleAsRecommended() {
-        // demand=5000, headway=300 -> requiredCap=63
+        // demand=5000, peakHour=600, fleetSize=10 -> requiredCap=75
         when(afluenciaRepository.findAverageDailyDemand("linea 1", WEEKDAY))
                 .thenReturn(new BigDecimal("5000"));
-        when(frequencyRepository.findAverageHeadwayByRouteShortName("1"))
-                .thenReturn(300.0);
         when(routeRepository.findByAgencyAndShortName("MB", "1"))
                 .thenReturn(Optional.of(buildRoute("route-1", 30)));
 
@@ -140,7 +126,7 @@ class RecommendBusModelUseCaseTest {
         when(busModelRepository.findByFuelType(FuelType.ELECTRIC))
                 .thenReturn(List.of(expensive, cheap));
 
-        ModelRecommendation result = useCase.execute("linea 1", "weekday", 80);
+        ModelRecommendation result = useCase.execute("linea 1", "weekday", 80, 10);
 
         assertEquals(2, result.getModels().size());
         ModelRecommendation.ModelCandidate cheapCandidate = result.getModels().stream()
@@ -157,27 +143,10 @@ class RecommendBusModelUseCaseTest {
     }
 
     @Test
-    void executeShouldThrowWhenNoFrequencyData() {
-        when(afluenciaRepository.findAverageDailyDemand("linea 1", WEEKDAY))
-                .thenReturn(new BigDecimal("5000"));
-        when(frequencyRepository.findAverageHeadwayByRouteShortName("1"))
-                .thenReturn(null);
-        when(routeRepository.findByAgencyAndShortName("MB", "1"))
-                .thenReturn(Optional.empty());
-        when(busModelRepository.findByFuelType(FuelType.ELECTRIC))
-                .thenReturn(List.of());
-
-        assertThrows(IllegalStateException.class,
-                () -> useCase.execute("linea 1", "weekday", 80));
-    }
-
-    @Test
     void executeShouldFilterByAutonomyRequirement() {
         // routeDistance=100km -> autonomy required >= 200km
         when(afluenciaRepository.findAverageDailyDemand("linea 1", WEEKDAY))
                 .thenReturn(new BigDecimal("5000"));
-        when(frequencyRepository.findAverageHeadwayByRouteShortName("1"))
-                .thenReturn(300.0);
         when(routeRepository.findByAgencyAndShortName("MB", "1"))
                 .thenReturn(Optional.of(buildRoute("route-1", 100)));
 
@@ -186,28 +155,27 @@ class RecommendBusModelUseCaseTest {
         when(busModelRepository.findByFuelType(FuelType.ELECTRIC))
                 .thenReturn(List.of(shortRange, longRange));
 
-        ModelRecommendation result = useCase.execute("linea 1", "weekday", 80);
+        ModelRecommendation result = useCase.execute("linea 1", "weekday", 80, 10);
 
         assertEquals(1, result.getModels().size());
         assertEquals(2L, result.getModels().get(0).getId());
     }
 
     @Test
-    void executeShouldUseDefaultOccupancyWhenNull() {
-        // null dayType -> WEEKDAY, null occupancy -> 80 (0.80 default)
-        // demand=5000, headway=300 -> peakHour=600, busesPerHour=12
-        // requiredCap = CEIL(600 / (12 * 0.80)) = CEIL(62.5) = 63
+    void executeShouldUseDefaultFleetSizeWhenNull() {
+        // null fleetSize -> default = CEIL(peakHour / (80 * occupancy))
+        // demand=5000, peakHour=600, default fleet = CEIL(600/64) = 10
+        // requiredCap = CEIL(600 / (10 * 0.80)) = CEIL(75) = 75
         when(afluenciaRepository.findAverageDailyDemand("linea 1", WEEKDAY))
                 .thenReturn(new BigDecimal("5000"));
-        when(frequencyRepository.findAverageHeadwayByRouteShortName("1"))
-                .thenReturn(300.0);
         when(routeRepository.findByAgencyAndShortName("MB", "1"))
                 .thenReturn(Optional.of(buildRoute("route-1", 30)));
         when(busModelRepository.findByFuelType(FuelType.ELECTRIC))
-                .thenReturn(List.of());
+                .thenReturn(List.of(buildElectricModel(1L, "Bus", 85, 300, 420000)));
 
-        ModelRecommendation result = useCase.execute("linea 1", null, null);
+        ModelRecommendation result = useCase.execute("linea 1", null, null, null);
 
-        assertEquals(63, result.getRequiredCapacity());
+        // default fleet=10, reqCap=75
+        assertEquals(75, result.getRequiredCapacity());
     }
 }

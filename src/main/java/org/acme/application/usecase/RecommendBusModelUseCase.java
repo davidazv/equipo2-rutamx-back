@@ -11,7 +11,6 @@ import org.acme.domain.models.ModelRecommendation;
 import org.acme.domain.models.Route;
 import org.acme.domain.repository.AfluenciaMetrobusRepository;
 import org.acme.domain.repository.BusModelRepository;
-import org.acme.domain.repository.FrequencyRepository;
 import org.acme.domain.repository.RouteRepository;
 
 import java.math.BigDecimal;
@@ -25,22 +24,20 @@ public class RecommendBusModelUseCase {
     private static final Logger log = Logger.getLogger(RecommendBusModelUseCase.class.getName());
 
     private final AfluenciaMetrobusRepository afluenciaRepository;
-    private final FrequencyRepository frequencyRepository;
     private final RouteRepository routeRepository;
     private final BusModelRepository busModelRepository;
 
     @Inject
     public RecommendBusModelUseCase(AfluenciaMetrobusRepository afluenciaRepository,
-                                     FrequencyRepository frequencyRepository,
                                      RouteRepository routeRepository,
                                      BusModelRepository busModelRepository) {
         this.afluenciaRepository = afluenciaRepository;
-        this.frequencyRepository = frequencyRepository;
         this.routeRepository = routeRepository;
         this.busModelRepository = busModelRepository;
     }
 
-    public ModelRecommendation execute(String linea, String dayTypeStr, Integer occupancyPercent) {
+    public ModelRecommendation execute(String linea, String dayTypeStr,
+                                       Integer occupancyPercent, Integer fleetSize) {
         DayType dayType = DayType.fromString(dayTypeStr);
         int occ = (occupancyPercent == null) ? 80 : occupancyPercent;
         double targetOccupancy = occ / 100.0;
@@ -48,21 +45,18 @@ public class RecommendBusModelUseCase {
         BigDecimal avgDemand = afluenciaRepository.findAverageDailyDemand(linea, dayType);
         if (avgDemand == null) throw new DemandNotFoundException(linea);
 
-        // Extract route short name: "linea 1" -> "1"
         String routeShortName = linea.replaceAll("\\D+", "").trim();
-
-        Double avgHeadway = frequencyRepository.findAverageHeadwayByRouteShortName(routeShortName);
-        if (avgHeadway == null) {
-            throw new IllegalStateException(
-                    "No se encontraron datos de frecuencia para la ruta: " + routeShortName);
-        }
 
         Route route = routeRepository.findByAgencyAndShortName("MB", routeShortName).orElse(null);
         double routeDistanceKm = (route != null) ? route.getDistanceKm() : 0.0;
 
         double peakHourDemand = avgDemand.doubleValue() * FleetConstants.PEAK_HOUR_FACTOR;
-        double busesPerHour = 3600.0 / avgHeadway;
-        int requiredCapacity = (int) Math.ceil(peakHourDemand / (busesPerHour * targetOccupancy));
+
+        // Default fleet size = same as bus-count recommendation
+        int fleet = (fleetSize != null) ? fleetSize
+                : (int) Math.ceil(peakHourDemand / (FleetConstants.DEFAULT_BUS_CAPACITY * targetOccupancy));
+
+        int requiredCapacity = (int) Math.ceil(peakHourDemand / (fleet * targetOccupancy));
 
         List<BusModel> electricModels = busModelRepository.findByFuelType(FuelType.ELECTRIC);
 

@@ -56,7 +56,8 @@ public class FleetResource {
     @Path("/model-recommendation")
     public Response getModelRecommendation(@QueryParam("linea") String linea,
                                             @QueryParam("dayType") String dayType,
-                                            @QueryParam("occupancy") Integer occupancy) {
+                                            @QueryParam("occupancy") Integer occupancy,
+                                            @QueryParam("fleetSize") Integer fleetSize) {
         if (linea == null || linea.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("El parámetro linea es requerido").build();
@@ -65,8 +66,12 @@ public class FleetResource {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("La ocupación debe estar entre 60 y 95").build();
         }
+        if (fleetSize != null && fleetSize < 1) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("El tamaño de flota debe ser al menos 1").build();
+        }
         try {
-            return Response.ok(recommendBusModelUseCase.execute(linea, dayType, occupancy)).build();
+            return Response.ok(recommendBusModelUseCase.execute(linea, dayType, occupancy, fleetSize)).build();
         } catch (DemandNotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         } catch (IllegalArgumentException | IllegalStateException e) {

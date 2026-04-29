@@ -3,13 +3,19 @@ package org.acme.infrastructure.repository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import org.acme.domain.models.Route;
+import org.acme.domain.models.RouteGeometry;
 import org.acme.domain.repository.RouteRepository;
+import org.acme.infrastructure.entities.AgencyEntity;
+import org.acme.infrastructure.entities.RouteEntity;
 import org.acme.infrastructure.mapper.RouteMapper;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -25,6 +31,27 @@ public class RouteRepositoryImpl implements RouteRepository {
             "HAVING MAX(s.shape_dist_traveled) > 0 " +
             "ORDER BY r.route_short_name";
 
+    private static final String ROUTES_WITH_SHAPES_QUERY =
+            "SELECT r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type, " +
+            "r.route_color, s.shape_pt_lon, s.shape_pt_lat, s.shape_dist_traveled " +
+            "FROM routes r " +
+            "INNER JOIN (" +
+            "  SELECT route_id, MIN(shape_id) AS shape_id FROM trips WHERE shape_id IS NOT NULL GROUP BY route_id" +
+            ") ts ON ts.route_id = r.route_id " +
+            "INNER JOIN shapes s ON s.shape_id = ts.shape_id " +
+            "ORDER BY r.route_id, s.shape_pt_sequence";
+
+    private static final String ROUTES_WITH_SHAPES_BY_AGENCY_QUERY =
+            "SELECT r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type, " +
+            "r.route_color, s.shape_pt_lon, s.shape_pt_lat, s.shape_dist_traveled " +
+            "FROM routes r " +
+            "INNER JOIN (" +
+            "  SELECT route_id, MIN(shape_id) AS shape_id FROM trips WHERE shape_id IS NOT NULL GROUP BY route_id" +
+            ") ts ON ts.route_id = r.route_id " +
+            "INNER JOIN shapes s ON s.shape_id = ts.shape_id " +
+            "WHERE r.agency_id = ?1 " +
+            "ORDER BY r.route_id, s.shape_pt_sequence";
+
     private static final String ROUTE_BY_ID_WITH_DISTANCE_QUERY =
             "SELECT r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type, " +
             "MAX(s.shape_dist_traveled) AS distance_km " +
@@ -32,6 +59,16 @@ public class RouteRepositoryImpl implements RouteRepository {
             "INNER JOIN trips t ON t.route_id = r.route_id " +
             "INNER JOIN shapes s ON s.shape_id = t.shape_id " +
             "WHERE r.route_id = ?1 " +
+            "GROUP BY r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type " +
+            "HAVING MAX(s.shape_dist_traveled) > 0";
+
+    private static final String ROUTE_BY_AGENCY_SHORT_NAME_QUERY =
+            "SELECT r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type, " +
+            "MAX(s.shape_dist_traveled) AS distance_km " +
+            "FROM routes r " +
+            "INNER JOIN trips t ON t.route_id = r.route_id " +
+            "INNER JOIN shapes s ON s.shape_id = t.shape_id " +
+            "WHERE r.agency_id = ?1 AND r.route_short_name = ?2 " +
             "GROUP BY r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type " +
             "HAVING MAX(s.shape_dist_traveled) > 0";
 
@@ -53,6 +90,18 @@ public class RouteRepositoryImpl implements RouteRepository {
     }
 
     @Override
+    public Optional<Route> findByAgencyAndShortName(String agencyId, String routeShortName) {
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = entityManager
+                .createNativeQuery(ROUTE_BY_AGENCY_SHORT_NAME_QUERY)
+                .setParameter(1, agencyId)
+                .setParameter(2, routeShortName)
+                .getResultList();
+
+        return results.stream().findFirst().map(this::mapRow);
+    }
+
+    @Override
     public Optional<Route> findByIdWithDistance(String routeId) {
         @SuppressWarnings("unchecked")
         List<Object[]> results = entityManager
@@ -61,6 +110,57 @@ public class RouteRepositoryImpl implements RouteRepository {
                 .getResultList();
 
         return results.stream().findFirst().map(this::mapRow);
+    }
+
+    @Override
+    public List<RouteGeometry> findAllWithShapes() {
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = entityManager
+                .createNativeQuery(ROUTES_WITH_SHAPES_QUERY)
+                .getResultList();
+
+        return buildRouteGeometries(results);
+    }
+
+    private List<RouteGeometry> buildRouteGeometries(List<Object[]> results) {
+        Map<String, RouteGeometry> map = new LinkedHashMap<>();
+        for (Object[] row : results) {
+            String routeId = (String) row[0];
+            RouteGeometry rg = map.computeIfAbsent(routeId, k -> {
+                RouteGeometry g = new RouteGeometry();
+                g.setRouteId(routeId);
+                g.setAgencyId((String) row[1]);
+                g.setRouteShortName((String) row[2]);
+                g.setRouteLongName((String) row[3]);
+                g.setRouteType(((Number) row[4]).intValue());
+                g.setRouteColor((String) row[5]);
+                g.setDistanceKm(0.0);
+                g.setCoordinates(new ArrayList<>());
+                return g;
+            });
+
+            double lon = row[6] instanceof BigDecimal ? ((BigDecimal) row[6]).doubleValue() : ((Number) row[6]).doubleValue();
+            double lat = row[7] instanceof BigDecimal ? ((BigDecimal) row[7]).doubleValue() : ((Number) row[7]).doubleValue();
+            rg.getCoordinates().add(new double[]{lon, lat});
+
+            double dist = row[8] instanceof BigDecimal ? ((BigDecimal) row[8]).doubleValue() : ((Number) row[8]).doubleValue();
+            if (dist > rg.getDistanceKm()) {
+                rg.setDistanceKm(dist);
+            }
+        }
+
+        return new ArrayList<>(map.values());
+    }
+
+    @Override
+    public List<RouteGeometry> findByAgencyWithShapes(String agencyId) {
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = entityManager
+                .createNativeQuery(ROUTES_WITH_SHAPES_BY_AGENCY_QUERY)
+                .setParameter(1, agencyId)
+                .getResultList();
+
+        return buildRouteGeometries(results);
     }
 
     private Route mapRow(Object[] row) {
@@ -74,5 +174,28 @@ public class RouteRepositoryImpl implements RouteRepository {
                 : ((Number) row[5]).doubleValue();
 
         return RouteMapper.toDomain(routeId, agencyId, shortName, longName, routeType, distanceKm);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAll() {
+        entityManager.createQuery("DELETE FROM RouteEntity").executeUpdate();
+    }
+
+    @Override
+    @Transactional
+    public int createAll(List<Route> items) {
+        int count = 0;
+        for (Route item : items) {
+            RouteEntity entity = RouteMapper.toEntity(item);
+            AgencyEntity agency = entityManager.getReference(AgencyEntity.class, item.getAgencyId());
+            entity.setAgency(agency);
+            entityManager.persist(entity);
+            if (++count % 200 == 0) {
+                entityManager.flush();
+                entityManager.clear();
+            }
+        }
+        return count;
     }
 }

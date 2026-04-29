@@ -1,6 +1,9 @@
 -- H2 test seed data — runs after drop-and-create
 -- Tables with created_at/updated_at NOT NULL need explicit timestamps
 
+-- upload_metadata (H2 auto-creates from entity, but seed for tests)
+
+
 INSERT INTO roles (name, description, created_at, updated_at) VALUES ('ADMIN', 'Administrador del sistema', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 INSERT INTO roles (name, description, created_at, updated_at) VALUES ('CEO', 'Chief Executive Officer', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 INSERT INTO roles (name, description, created_at, updated_at) VALUES ('COO', 'Chief Operating Officer', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
@@ -17,8 +20,8 @@ INSERT INTO bus_models (name, manufacturer, fuel_type, autonomy_km, passenger_ca
 INSERT INTO bus_models (name, manufacturer, fuel_type, autonomy_km, passenger_capacity, unit_cost_usd, battery_capacity_kwh, energy_consumption_kwh_km, fuel_consumption_l_km, maintenance_cost_per_km, co2_emissions_g_km, created_at, updated_at) VALUES ('Yutong DMT Hybrid H12', 'Yutong', 'DIESEL', 700, 87, 200000, 0.0, 0.0, 0.35, 0.22, 940, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- GTFS seed data for route distance computation (HU05)
-INSERT INTO agency (agency_id, agency_name, agency_url, agency_timezone, agency_lang) VALUES ('SEMOVI', 'SEMOVI', 'https://semovi.cdmx.gob.mx/', 'America/Mexico_City', 'es');
-INSERT INTO agency (agency_id, agency_name, agency_url, agency_timezone, agency_lang) VALUES ('TROLE', 'Servicio de Transportes Electricos', 'https://www.ste.cdmx.gob.mx/', 'America/Mexico_City', 'es');
+INSERT INTO agency (agency_id, agency_name, agency_url, agency_timezone, agency_lang, agency_color) VALUES ('SEMOVI', 'SEMOVI', 'https://semovi.cdmx.gob.mx/', 'America/Mexico_City', 'es', '009B3A');
+INSERT INTO agency (agency_id, agency_name, agency_url, agency_timezone, agency_lang, agency_color) VALUES ('TROLE', 'Servicio de Transportes Electricos', 'https://www.ste.cdmx.gob.mx/', 'America/Mexico_City', 'es', '1F5AF0');
 
 INSERT INTO calendar (service_id, monday, tuesday, wednesday, thursday, friday, saturday, sunday, start_date, end_date) VALUES ('TR13_SERVICE', 1, 1, 1, 1, 1, 1, 1, '2026-01-01', '2026-12-31');
 INSERT INTO calendar (service_id, monday, tuesday, wednesday, thursday, friday, saturday, sunday, start_date, end_date) VALUES ('B_0', 1, 1, 1, 1, 1, 1, 1, '2024-12-01', '2025-12-31');
@@ -35,3 +38,25 @@ INSERT INTO shapes (shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence, sha
 INSERT INTO shapes (shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence, shape_dist_traveled) VALUES ('TR13_1', 19.375000, -99.090000, 4, 20.0);
 INSERT INTO shapes (shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence, shape_dist_traveled) VALUES ('TEST_SHAPE_1', 19.400000, -99.100000, 1, 0.0);
 INSERT INTO shapes (shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence, shape_dist_traveled) VALUES ('TEST_SHAPE_1', 19.410000, -99.110000, 2, 15.0);
+
+-- HU11: Metrobus agency, route, trip, shape, frequency, afluencia for fleet tests
+INSERT INTO agency (agency_id, agency_name, agency_url, agency_timezone, agency_lang, agency_color) VALUES ('MB', 'Metrobus', 'https://www.metrobus.cdmx.gob.mx/', 'America/Mexico_City', 'es', 'C4161C');
+
+INSERT INTO routes (route_id, agency_id, route_short_name, route_long_name, route_type) VALUES ('MB_L1', 'MB', '1', 'Metrobus Linea 1', 3);
+
+INSERT INTO trips (trip_id, route_id, service_id, shape_id, trip_headsign, trip_short_name, direction_id) VALUES ('MB_L1_TRIP_1', 'MB_L1', 'B_0', 'MB_L1_SHAPE', NULL, NULL, 0);
+
+INSERT INTO shapes (shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence, shape_dist_traveled) VALUES ('MB_L1_SHAPE', 19.300000, -99.100000, 1, 0.0);
+INSERT INTO shapes (shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence, shape_dist_traveled) VALUES ('MB_L1_SHAPE', 19.350000, -99.150000, 2, 15.0);
+INSERT INTO shapes (shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence, shape_dist_traveled) VALUES ('MB_L1_SHAPE', 19.400000, -99.200000, 3, 30.0);
+
+INSERT INTO frequencies (trip_id, start_time, end_time, headway_secs, exact_times) VALUES ('MB_L1_TRIP_1', '05:00:00', '23:00:00', 300, 0);
+
+INSERT INTO afluencia_metrobus (fecha, mes, anio, linea, tipo_pago, afluencia) VALUES ('2025-01-06', 'Enero', 2025, 'linea 1', 'Prepago', 3000.00);
+INSERT INTO afluencia_metrobus (fecha, mes, anio, linea, tipo_pago, afluencia) VALUES ('2025-01-06', 'Enero', 2025, 'linea 1', 'Gratuidad', 1000.00);
+INSERT INTO afluencia_metrobus (fecha, mes, anio, linea, tipo_pago, afluencia) VALUES ('2025-01-07', 'Enero', 2025, 'linea 1', 'Prepago', 3200.00);
+INSERT INTO afluencia_metrobus (fecha, mes, anio, linea, tipo_pago, afluencia) VALUES ('2025-01-07', 'Enero', 2025, 'linea 1', 'Gratuidad', 800.00);
+INSERT INTO afluencia_metrobus (fecha, mes, anio, linea, tipo_pago, afluencia) VALUES ('2025-01-11', 'Enero', 2025, 'linea 1', 'Prepago', 2000.00);
+INSERT INTO afluencia_metrobus (fecha, mes, anio, linea, tipo_pago, afluencia) VALUES ('2025-01-11', 'Enero', 2025, 'linea 1', 'Gratuidad', 500.00);
+INSERT INTO afluencia_metrobus (fecha, mes, anio, linea, tipo_pago, afluencia) VALUES ('2025-01-12', 'Enero', 2025, 'linea 1', 'Prepago', 1500.00);
+INSERT INTO afluencia_metrobus (fecha, mes, anio, linea, tipo_pago, afluencia) VALUES ('2025-01-12', 'Enero', 2025, 'linea 1', 'Gratuidad', 300.00);

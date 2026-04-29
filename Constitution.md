@@ -20,6 +20,7 @@ Rules and conventions for the Quarkus + Panache backend of the RutaMx platform. 
 12. [Testing Strategy](#testing-strategy)
 13. [Branching Strategy](#branching-strategy)
 14. [Commit & PR Conventions](#commit--pr-conventions)
+15. [Feature Documentation](#feature-documentation)
 
 ---
 
@@ -374,6 +375,8 @@ Rules:
 
 Start Quarkus with H2 using the `%test` profile. H2 starts empty — `drop-and-create` creates the tables fresh each run. MySQL is never touched.
 
+#### Mocking the auth filter
+
 Replace `FirebaseAuthFilter` in tests with a subclass that skips Firebase and injects a test user directly:
 
 ```java
@@ -399,10 +402,41 @@ public class TestFirebaseAuthFilter extends FirebaseAuthFilter {
 
 This class lives in `src/test/java/org/acme/interfaces/rest/`.
 
+#### Mocking external API beans with `@InjectMock`
+
+External service beans (e.g. `FirebaseUserCreator`) must be mocked using Quarkus' `@InjectMock` so that integration tests never call real external APIs. Stub the mock's behavior in `@BeforeEach`:
+
+```java
+@QuarkusTest
+class UserResourceTest {
+
+    @InjectMock
+    FirebaseUserCreator firebaseUserCreator;
+
+    @Inject
+    UserRepository userRepository;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        when(firebaseUserCreator.create(anyString(), anyString()))
+                .thenAnswer(inv -> "firebase-uid-" + UUID.randomUUID());
+        doNothing().when(firebaseUserCreator).deleteUser(anyString());
+        doNothing().when(firebaseUserCreator).disableUser(anyString());
+    }
+}
+```
+
+Key points:
+
+- `@InjectMock` replaces the real CDI bean with a Mockito mock for the entire test class.
+- Stub every method the test flow will hit — unstubbed calls return Mockito defaults (`null`, `0`, `false`), which may cause `NullPointerException` down the stack.
+- Use `@Inject` (not `@InjectMock`) for beans that should run real — repositories, use cases, etc.
+
 Rules:
 
 - After a write operation, re-read from the DB and assert — never trust only the HTTP response.
 - The only thing mocked in integration tests is external services that can't run locally (Firebase). Everything else runs real.
+- Every resource test class must use `@QuarkusTest` and call endpoints via RestAssured (`given().when().then()`).
 
 ---
 
@@ -462,3 +496,22 @@ Rules:
 - Base branch is always `develop` (except `hotfix/*`, which targets `main`).
 - Description includes: what changed, why, and the HU reference.
 - Every bugfix PR must include a test that was red before the fix and green after.
+
+---
+
+## Feature Documentation
+
+Every Historia de Usuario (HU) must have its own documentation file in `docs/`.
+
+**File naming:** `HU{nn}.md` — matches the HU identifier from branches and commits. Examples: `HU05.md`, `HU07.md`.
+
+**Required content:**
+
+- **Descripcion:** one paragraph explaining the feature's purpose.
+- **Endpoints:** every REST endpoint introduced by the HU, including method, URL, parameters, response examples, and error codes.
+- **Logica de negocio:** formulas, constants, and decision rules used in the use case(s).
+- **Arquitectura:** which layers are involved (resource, use case, repository) and how they connect.
+
+**When to create:** the documentation file must be committed as part of the feature branch, before the PR to `develop` is opened. A PR missing its `docs/HU{nn}.md` file is incomplete.
+
+**Maintenance:** if the feature changes in a later branch (bugfix, enhancement), update the existing `HU{nn}.md` file in that branch.

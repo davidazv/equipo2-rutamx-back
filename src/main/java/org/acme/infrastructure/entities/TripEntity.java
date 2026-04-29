@@ -24,7 +24,7 @@ public class TripEntity {
     @Column(name = "trip_headsign", length = 150)
     private String tripHeadsign;
 
-    @Column(name = "trip_short_name", length = 50)
+    @Column(name = "trip_short_name", length = 150)
     private String tripShortName;
 
     @Column(name = "direction_id")

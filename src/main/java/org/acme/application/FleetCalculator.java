@@ -31,4 +31,16 @@ public final class FleetCalculator {
     public static double co2AvoidedTons(int buses, double kmPerYear, double co2EmissionsGKm) {
         return (buses * kmPerYear * co2EmissionsGKm) / 1_000_000.0;
     }
+
+    public static double occupancyFactor(int occupancyPercent, int passengerCapacity) {
+        return 1.0 + (occupancyPercent / 100.0) * FleetConstants.OCCUPANCY_IMPACT * passengerCapacity;
+    }
+
+    public static double totalConsumptionFactor(double occupancyFactor) {
+        return occupancyFactor * FleetConstants.TERRAIN_FACTOR * FleetConstants.AC_FACTOR;
+    }
+
+    public static double energyConsumptionKwh(double distanceKm, double baseConsumptionKwhKm, double totalFactor) {
+        return distanceKm * baseConsumptionKwhKm * totalFactor;
+    }
 }

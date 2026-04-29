@@ -11,4 +11,4 @@ target/
 .settings/
 src/main/resources/rutamx-firebase-adminsdk.json
 .env
-
+*.glb

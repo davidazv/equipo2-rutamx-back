@@ -137,4 +137,57 @@ class RouteResourceTest {
                 .body("find { it.routeId == 'TR13' }.distanceKm", equalTo(20.0f))
                 .body("find { it.routeId == 'TR13' }.routeShortName", equalTo("13"));
     }
+
+    // HU19 — GET /api/routes/travel-times
+
+    @Test
+    void getTravelTimesShouldReturn200WithSeedData() {
+        given()
+                .when().get("/api/routes/travel-times")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    void getTravelTimesShouldReturnExactlyTwoRoutes() {
+        given()
+                .when().get("/api/routes/travel-times")
+                .then()
+                .statusCode(200)
+                .body("$.size()", equalTo(2));
+    }
+
+    @Test
+    void getTravelTimesShouldIncludeAllComputedFieldsForTR13() {
+        // TR13: distanceKm=20, scheduledMin=60 (from seed stop_times), freq=3 min
+        // estimatedMin = round(20/20*60) = 60
+        // avgSpeed     = round(20/(60/60)*10)/10 = 20.0
+        // variability  = round(((60-60)/60*100)*10)/10 = 0.0
+        given()
+                .when().get("/api/routes/travel-times")
+                .then()
+                .statusCode(200)
+                .body("find { it.routeId == 'TR13' }.distanceKm",            equalTo(20.0f))
+                .body("find { it.routeId == 'TR13' }.scheduledTimeMinutes",  equalTo(60))
+                .body("find { it.routeId == 'TR13' }.estimatedTimeMinutes",  equalTo(60))
+                .body("find { it.routeId == 'TR13' }.avgSpeedKmH",           equalTo(20.0f))
+                .body("find { it.routeId == 'TR13' }.variabilityPercent",    equalTo(0.0f))
+                .body("find { it.routeId == 'TR13' }.frequencyMinutes",      equalTo(3));
+    }
+
+    @Test
+    void getTravelTimesShouldComputeZeroMetricsForRouteWithNoStopTimes() {
+        // TEST_ROUTE has no stop_times → scheduledMin=0 → avgSpeed and variability default to 0
+        // estimatedMin = round(15/20*60) = 45
+        given()
+                .when().get("/api/routes/travel-times")
+                .then()
+                .statusCode(200)
+                .body("find { it.routeId == 'TEST_ROUTE' }.distanceKm",           equalTo(15.0f))
+                .body("find { it.routeId == 'TEST_ROUTE' }.scheduledTimeMinutes", equalTo(0))
+                .body("find { it.routeId == 'TEST_ROUTE' }.estimatedTimeMinutes", equalTo(45))
+                .body("find { it.routeId == 'TEST_ROUTE' }.avgSpeedKmH",          equalTo(0.0f))
+                .body("find { it.routeId == 'TEST_ROUTE' }.variabilityPercent",   equalTo(0.0f))
+                .body("find { it.routeId == 'TEST_ROUTE' }.frequencyMinutes",     equalTo(0));
+    }
 }

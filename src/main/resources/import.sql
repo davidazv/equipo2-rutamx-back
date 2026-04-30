@@ -1,6 +1,9 @@
 -- H2 test seed data — runs after drop-and-create
 -- Tables with created_at/updated_at NOT NULL need explicit timestamps
 
+-- H2 alias for MySQL TIME_TO_SEC function (not natively supported by H2 2.x)
+CREATE ALIAS IF NOT EXISTS TIME_TO_SEC AS 'int timeToSec(String t) throws Exception { if (t == null) return 0; String[] p = t.split(":"); return Integer.parseInt(p[0]) * 3600 + Integer.parseInt(p[1]) * 60 + Integer.parseInt(p[2]); }';
+
 -- upload_metadata (H2 auto-creates from entity, but seed for tests)
 
 
@@ -38,3 +41,14 @@ INSERT INTO shapes (shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence, sha
 INSERT INTO shapes (shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence, shape_dist_traveled) VALUES ('TR13_1', 19.375000, -99.090000, 4, 20.0);
 INSERT INTO shapes (shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence, shape_dist_traveled) VALUES ('TEST_SHAPE_1', 19.400000, -99.100000, 1, 0.0);
 INSERT INTO shapes (shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence, shape_dist_traveled) VALUES ('TEST_SHAPE_1', 19.410000, -99.110000, 2, 15.0);
+
+-- Stops required as FK for stop_times (HU19)
+INSERT INTO stops (stop_id, stop_name, stop_lat, stop_lon) VALUES ('STOP_A', 'Parada Inicio', 19.345718, -99.065139);
+INSERT INTO stops (stop_id, stop_name, stop_lat, stop_lon) VALUES ('STOP_B', 'Parada Final', 19.375000, -99.090000);
+
+-- stop_times for TR13_TRIP_1: 08:00 → 09:00 = 60 min scheduled (HU19)
+INSERT INTO stop_times (trip_id, stop_id, stop_sequence, arrival_time, departure_time) VALUES ('TR13_TRIP_1', 'STOP_A', 1, '08:00:00', '08:00:00');
+INSERT INTO stop_times (trip_id, stop_id, stop_sequence, arrival_time, departure_time) VALUES ('TR13_TRIP_1', 'STOP_B', 2, '09:00:00', '09:00:00');
+
+-- frequency for TR13_TRIP_1: 180 s headway → 3 min (HU19)
+INSERT INTO frequencies (trip_id, start_time, end_time, headway_secs) VALUES ('TR13_TRIP_1', '06:00:00', '22:00:00', 180);

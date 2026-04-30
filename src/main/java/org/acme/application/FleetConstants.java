@@ -17,4 +17,7 @@ public final class FleetConstants {
     public static final double TERRAIN_FACTOR = 1.15;
     public static final double AC_FACTOR = 1.1;
     public static final double MIN_BATTERY_PERCENT = 10.0;
+
+    /** Reference average speed (km/h) used to compute estimated travel time per route (HU09). */
+    public static final double REFERENCE_SPEED_KMH = 20.0;
 }

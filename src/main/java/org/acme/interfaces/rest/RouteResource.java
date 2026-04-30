@@ -4,6 +4,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.acme.application.usecase.GetRouteTravelTimesUseCase;
 import org.acme.domain.repository.RouteRepository;
 
 import java.util.logging.Logger;
@@ -16,10 +17,13 @@ public class RouteResource {
     private static final Logger log = Logger.getLogger(RouteResource.class.getName());
 
     private final RouteRepository routeRepository;
+    private final GetRouteTravelTimesUseCase getTravelTimesUseCase;
 
     @Inject
-    public RouteResource(RouteRepository routeRepository) {
+    public RouteResource(RouteRepository routeRepository,
+                         GetRouteTravelTimesUseCase getTravelTimesUseCase) {
         this.routeRepository = routeRepository;
+        this.getTravelTimesUseCase = getTravelTimesUseCase;
     }
 
     @GET
@@ -34,6 +38,18 @@ public class RouteResource {
             return Response.ok(routeRepository.findByAgencyWithShapes(agencyId)).build();
         }
         return Response.ok(routeRepository.findAllWithShapes()).build();
+    }
+
+    @GET
+    @Path("/travel-times")
+    public Response listRouteTravelTimes() {
+        log.info("GET /api/routes/travel-times");
+        try {
+            return Response.ok(getTravelTimesUseCase.execute()).build();
+        } catch (Exception e) {
+            log.severe("Error listing travel times: " + e.getMessage());
+            return Response.serverError().entity("Error al obtener tiempos de recorrido").build();
+        }
     }
 
     @GET

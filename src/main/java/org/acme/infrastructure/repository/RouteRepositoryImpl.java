@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.acme.domain.models.Route;
 import org.acme.domain.models.RouteGeometry;
+import org.acme.domain.models.RouteTimeComparison;
 import org.acme.domain.repository.RouteRepository;
 import org.acme.infrastructure.entities.AgencyEntity;
 import org.acme.infrastructure.entities.RouteEntity;
@@ -51,6 +52,43 @@ public class RouteRepositoryImpl implements RouteRepository {
             "INNER JOIN shapes s ON s.shape_id = ts.shape_id " +
             "WHERE r.agency_id = ?1 " +
             "ORDER BY r.route_id, s.shape_pt_sequence";
+
+    private static final String ROUTES_WITH_TIME_QUERY =
+            "SELECT " +
+            "    r.route_id, " +
+            "    r.agency_id, " +
+            "    r.route_short_name, " +
+            "    r.route_long_name, " +
+            "    MAX(s.shape_dist_traveled)        AS distance_km, " +
+            "    COALESCE(sched.scheduled_minutes, 0) AS scheduled_time_minutes, " +
+            "    COALESCE(freq.frequency_minutes,  0) AS frequency_minutes " +
+            "FROM routes r " +
+            "INNER JOIN trips t  ON t.route_id = r.route_id " +
+            "INNER JOIN shapes s ON s.shape_id  = t.shape_id " +
+            "LEFT JOIN ( " +
+            "    SELECT t2.route_id, " +
+            "           MIN(trip_sched.sched_mins) AS scheduled_minutes " +
+            "    FROM trips t2 " +
+            "    INNER JOIN ( " +
+            "        SELECT trip_id, " +
+            "               ROUND((TIME_TO_SEC(MAX(arrival_time)) " +
+            "                    - TIME_TO_SEC(MIN(departure_time))) / 60) AS sched_mins " +
+            "        FROM stop_times " +
+            "        GROUP BY trip_id " +
+            "    ) trip_sched ON trip_sched.trip_id = t2.trip_id " +
+            "    GROUP BY t2.route_id " +
+            ") sched ON sched.route_id = r.route_id " +
+            "LEFT JOIN ( " +
+            "    SELECT t3.route_id, " +
+            "           ROUND(MIN(f.headway_secs) / 60) AS frequency_minutes " +
+            "    FROM trips t3 " +
+            "    INNER JOIN frequencies f ON f.trip_id = t3.trip_id " +
+            "    GROUP BY t3.route_id " +
+            ") freq ON freq.route_id = r.route_id " +
+            "GROUP BY r.route_id, r.agency_id, r.route_short_name, r.route_long_name, " +
+            "         sched.scheduled_minutes, freq.frequency_minutes " +
+            "HAVING MAX(s.shape_dist_traveled) > 0 " +
+            "ORDER BY r.route_short_name";
 
     private static final String ROUTE_BY_ID_WITH_DISTANCE_QUERY =
             "SELECT r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type, " +
@@ -139,6 +177,30 @@ public class RouteRepositoryImpl implements RouteRepository {
                 .getResultList();
 
         return buildRouteGeometries(results);
+    }
+
+    @Override
+    public List<RouteTimeComparison> findAllWithTimeComparison() {
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = entityManager
+                .createNativeQuery(ROUTES_WITH_TIME_QUERY)
+                .getResultList();
+
+        List<RouteTimeComparison> list = new ArrayList<>();
+        for (Object[] row : results) {
+            RouteTimeComparison r = new RouteTimeComparison();
+            r.setRouteId((String) row[0]);
+            r.setAgencyId((String) row[1]);
+            r.setRouteShortName((String) row[2]);
+            r.setRouteLongName((String) row[3]);
+            r.setDistanceKm(row[4] instanceof BigDecimal
+                    ? ((BigDecimal) row[4]).doubleValue()
+                    : ((Number) row[4]).doubleValue());
+            r.setScheduledTimeMinutes(((Number) row[5]).intValue());
+            r.setFrequencyMinutes(((Number) row[6]).intValue());
+            list.add(r);
+        }
+        return list;
     }
 
     private Route mapRow(Object[] row) {

@@ -104,6 +104,17 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Optional<User> findByEmail(String email) {
+        List<UserEntity> results = entityManager
+                .createQuery(
+                        "SELECT u FROM UserEntity u LEFT JOIN FETCH u.role WHERE u.email = :email",
+                        UserEntity.class)
+                .setParameter("email", email)
+                .getResultList();
+        return results.stream().findFirst().map(UserMapper::toDomain);
+    }
+
+    @Override
     public boolean existsByEmail(String email) {
         Long count = entityManager
                 .createQuery("SELECT COUNT(u) FROM UserEntity u WHERE u.email = :email", Long.class)

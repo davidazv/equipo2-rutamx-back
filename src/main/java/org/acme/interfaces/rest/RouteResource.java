@@ -4,7 +4,9 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.acme.application.exception.NoGtfsDataException;
 import org.acme.application.usecase.GetRouteTravelTimesUseCase;
+import org.acme.application.usecase.GetTripsByDayUseCase;
 import org.acme.domain.repository.RouteRepository;
 
 import java.util.logging.Logger;
@@ -18,12 +20,15 @@ public class RouteResource {
 
     private final RouteRepository routeRepository;
     private final GetRouteTravelTimesUseCase getTravelTimesUseCase;
+    private final GetTripsByDayUseCase getTripsByDayUseCase;
 
     @Inject
     public RouteResource(RouteRepository routeRepository,
-                         GetRouteTravelTimesUseCase getTravelTimesUseCase) {
+                         GetRouteTravelTimesUseCase getTravelTimesUseCase,
+                         GetTripsByDayUseCase getTripsByDayUseCase) {
         this.routeRepository = routeRepository;
         this.getTravelTimesUseCase = getTravelTimesUseCase;
+        this.getTripsByDayUseCase = getTripsByDayUseCase;
     }
 
     @GET
@@ -49,6 +54,20 @@ public class RouteResource {
         } catch (Exception e) {
             log.severe("Error listing travel times: " + e.getMessage());
             return Response.serverError().entity("Error al obtener tiempos de recorrido").build();
+        }
+    }
+
+    @GET
+    @Path("/trips-by-day")
+    public Response listTripsByDay() {
+        log.info("GET /api/routes/trips-by-day");
+        try {
+            return Response.ok(getTripsByDayUseCase.execute()).build();
+        } catch (NoGtfsDataException e) {
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            log.severe("Error listing trips by day: " + e.getMessage());
+            return Response.serverError().entity("Error inesperado al obtener viajes por día").build();
         }
     }
 

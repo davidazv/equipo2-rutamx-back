@@ -35,50 +35,27 @@ Edita `src/main/resources/application.properties` y reemplaza el valor de:
 quarkus.datasource.password=TU_PASSWORD_AQUI
 ```
 
-### 3. Esquema de base de datos
+### 3. Esquema y datos iniciales
 
-La base de datos `rutamx` y las tablas deben existir antes de arrancar la app.
-Ejecuta este SQL en MySQL (Workbench, DBeaver o terminal):
+Antes de arrancar la app habilita `local_infile` en MySQL (solo se hace una vez):
 
 ```sql
-CREATE DATABASE IF NOT EXISTS rutamx CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE rutamx;
-
-CREATE TABLE roles (
-    id          BIGINT       NOT NULL AUTO_INCREMENT,
-    name        VARCHAR(50)  NOT NULL,
-    description VARCHAR(255) NULL,
-    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    CONSTRAINT uq_roles_name UNIQUE (name)
-) ENGINE=InnoDB;
-
-CREATE TABLE users (
-    id            BIGINT        NOT NULL AUTO_INCREMENT,
-    email         VARCHAR(255)  NOT NULL,
-    firebase_UUID VARCHAR(255)  NOT NULL,
-    first_name    VARCHAR(100)  NULL,
-    last_name     VARCHAR(100)  NULL,
-    role_id       BIGINT        NOT NULL,
-    status        ENUM('ACTIVE','SUSPENDED') NOT NULL DEFAULT 'ACTIVE',
-    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    CONSTRAINT uq_users_email    UNIQUE (email),
-    CONSTRAINT uq_users_firebase UNIQUE (firebase_UUID),
-    CONSTRAINT fk_users_role     FOREIGN KEY (role_id) REFERENCES roles(id)
-        ON UPDATE CASCADE ON DELETE RESTRICT
-) ENGINE=InnoDB;
-
-CREATE INDEX idx_users_status ON users (status);
-
-INSERT INTO roles (name, description) VALUES
-  ('ADMIN', 'Administrador del sistema'),
-  ('CEO',   'Chief Executive Officer'),
-  ('COO',   'Chief Operating Officer'),
-  ('CMO',   'Chief Marketing Officer');
+SET GLOBAL local_infile = 1;
 ```
+
+Luego ejecuta el script de inicialización desde la raíz del proyecto:
+
+```bash
+./scripts/seed-data.sh              # root sin contraseña
+./scripts/seed-data.sh -p secret    # root con contraseña
+```
+
+Este script:
+1. Crea la base de datos `rutamx` y todas las tablas (`docs/Initialize-mysql.sql`)
+2. Carga los 10 CSVs de `data/` con datos GTFS, modelos de autobús y afluencia Metrobús
+3. Inserta los roles y el usuario admin inicial
+
+> Sin este paso los KPIs y funcionalidades que dependen de datos GTFS o modelos de autobús no funcionarán.
 
 ### 4. Usuario ADMIN inicial
 

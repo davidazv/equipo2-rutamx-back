@@ -34,7 +34,8 @@ public class DeleteUserUseCase {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
 
-        if (authContext.getUser().getId().equals(id)) {
+        User caller = authContext.getUser();
+        if (caller != null && caller.getId().equals(id)) {
             throw new IllegalArgumentException("No puedes eliminar tu propia cuenta");
         }
 

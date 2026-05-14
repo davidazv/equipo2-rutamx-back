@@ -1,6 +1,5 @@
 package org.acme.interfaces.rest;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -13,7 +12,6 @@ import org.acme.application.usecase.RecommendBusModelUseCase;
 
 import java.util.logging.Logger;
 
-@ApplicationScoped
 @Path("/api/fleet")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

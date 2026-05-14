@@ -12,7 +12,9 @@ import org.acme.infrastructure.mapper.AfluenciaMetrobusMapper;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class AfluenciaMetrobusRepositoryImpl implements AfluenciaMetrobusRepository {
@@ -42,6 +44,35 @@ public class AfluenciaMetrobusRepositoryImpl implements AfluenciaMetrobusReposit
             r.setDayOfWeek(((Number) row[1]).intValue());
             r.setTotalAfluencia(((Number) row[2]).doubleValue());
             result.add(r);
+        }
+        return result;
+    }
+
+    private static final String AVG_DEMAND_BY_LINEA_QUERY =
+            "SELECT day_type, AVG(daily_total) AS avg_demand " +
+            "FROM ( " +
+            "  SELECT " +
+            "    CASE WHEN DAYOFWEEK(fecha) BETWEEN 2 AND 6 THEN 'weekday' " +
+            "         WHEN DAYOFWEEK(fecha) = 7 THEN 'saturday' " +
+            "         ELSE 'sunday' END AS day_type, " +
+            "    SUM(afluencia) AS daily_total " +
+            "  FROM afluencia_metrobus " +
+            "  WHERE linea = ?1 " +
+            "  GROUP BY fecha " +
+            ") daily_sums " +
+            "GROUP BY day_type";
+
+    @Override
+    public Map<String, Double> findAvgDemandByLinea(String linea) {
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = entityManager
+                .createNativeQuery(AVG_DEMAND_BY_LINEA_QUERY)
+                .setParameter(1, linea)
+                .getResultList();
+
+        Map<String, Double> result = new HashMap<>();
+        for (Object[] row : rows) {
+            result.put((String) row[0], ((Number) row[1]).doubleValue());
         }
         return result;
     }

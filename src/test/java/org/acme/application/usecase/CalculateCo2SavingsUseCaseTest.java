@@ -225,7 +225,7 @@ class CalculateCo2SavingsUseCaseTest {
     }
 
     @Test
-    void executeShouldSetNullDetallesWhenNoAfluencia() {
+    void executeShouldPopulateDetallesWithFallbackWhenNoAfluencia() {
         BusModel model = buildElectricModel(1L, 1.0);
         Route r = buildRoute("R1", "1", "Route 1", "AG", 20.0);
 
@@ -236,7 +236,21 @@ class CalculateCo2SavingsUseCaseTest {
         when(afluenciaRepository.findGroupedByLineaAndDow()).thenReturn(Collections.emptyList());
 
         List<Co2SavingsResult> results = useCase.execute(1L);
-        assertNull(results.get(0).getDetallesPorDia());
+        var detalles = results.get(0).getDetallesPorDia();
+        assertNotNull(detalles);
+        // All days have trips=5 → fallback pasajeros = 5 * 79 = 395
+        assertEquals(5, detalles.get("lunes").getViajes());
+        assertEquals(395.0, detalles.get("lunes").getPasajeros(), 0.01);
+    }
+
+    @Test
+    void normalizeLinesaShouldMatchVariantFormats() {
+        assertEquals("1", CalculateCo2SavingsUseCase.normalizeLinea("L1"));
+        assertEquals("1", CalculateCo2SavingsUseCase.normalizeLinea("Línea 1"));
+        assertEquals("1", CalculateCo2SavingsUseCase.normalizeLinea("linea 1"));
+        assertEquals("1", CalculateCo2SavingsUseCase.normalizeLinea("  1  "));
+        assertEquals("12", CalculateCo2SavingsUseCase.normalizeLinea("L12"));
+        assertEquals("", CalculateCo2SavingsUseCase.normalizeLinea(null));
     }
 
     @Test

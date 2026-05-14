@@ -76,13 +76,18 @@ public class CalculateCo2SavingsUseCase {
             tripsByRouteId.put(t.getRouteId(), t);
         }
 
-        // Build afluencia map: routeShortName -> (dow -> totalAfluencia)
+        // Build afluencia map: normalizedLinea -> (dow -> avgAfluencia)
         List<AfluenciaResumen> afluenciaData = afluenciaRepository.findGroupedByLineaAndDow();
         Map<String, Map<Integer, Double>> afluenciaByLinea = new HashMap<>();
         for (AfluenciaResumen a : afluenciaData) {
             afluenciaByLinea
-                    .computeIfAbsent(a.getLinea(), k -> new HashMap<>())
+                    .computeIfAbsent(normalizeLinea(a.getLinea()), k -> new HashMap<>())
                     .put(a.getDayOfWeek(), a.getTotalAfluencia());
+        }
+        if (!afluenciaByLinea.isEmpty()) {
+            log.info("afluenciaByLinea keys sample: " + afluenciaByLinea.keySet().stream().limit(5).toList());
+        } else {
+            log.warning("afluencia_metrobus no devolvió datos para el último año — se usará fallback constante");
         }
 
         double kwhPerKm = busModel.getEnergyConsumptionKwhKm().doubleValue();
@@ -132,9 +137,21 @@ public class CalculateCo2SavingsUseCase {
 
         for (Co2SavingsResult r : results) {
             double raw = r.getAhorroTon() * r.getDistanciaKm();
-            double score = maxRaw > 0 ? round2((raw / maxRaw) * 100.0) : 0.0;
-            r.setScore(score);
-            r.setPrioridad(score >= 70 ? "Alta" : score >= 40 ? "Media" : "Baja");
+            r.setScore(maxRaw > 0 ? round2((raw / maxRaw) * 100.0) : 0.0);
+        }
+
+        // Percentile thresholds over the current dataset:
+        // top 20% → Alta, 40–80% → Media, bottom 40% → Baja
+        List<Double> sorted = results.stream()
+                .map(Co2SavingsResult::getScore)
+                .sorted()
+                .toList();
+        int n = sorted.size();
+        double p80 = sorted.get((int) Math.floor(0.80 * n));
+        double p40 = sorted.get((int) Math.floor(0.40 * n));
+
+        for (Co2SavingsResult r : results) {
+            r.setPrioridad(r.getScore() >= p80 ? "Alta" : r.getScore() >= p40 ? "Media" : "Baja");
         }
     }
 
@@ -150,7 +167,7 @@ public class CalculateCo2SavingsUseCase {
                 trips.getSunday(), trips.getMonday(), trips.getTuesday(),
                 trips.getWednesday(), trips.getThursday(), trips.getFriday(), trips.getSaturday()};
 
-        Map<Integer, Double> pasajerosByDow = afluenciaByLinea.get(routeShortName);
+        Map<Integer, Double> pasajerosByDow = afluenciaByLinea.get(normalizeLinea(routeShortName));
 
         Map<String, DetallesDia> detalles = new LinkedHashMap<>();
         for (Map.Entry<Integer, String> entry : DOW_TO_SPANISH.entrySet()) {
@@ -168,6 +185,15 @@ public class CalculateCo2SavingsUseCase {
             detalles.put(nombre, new DetallesDia(viajes, round2(pasajeros)));
         }
         return detalles.isEmpty() ? null : detalles;
+    }
+
+    // Normalizes linea/route identifiers so "L1", "Línea 1", "linea 1" and "1" all match.
+    static String normalizeLinea(String raw) {
+        if (raw == null) return "";
+        String s = raw.trim().toLowerCase();
+        s = s.replaceAll("^l[íi]nea\\s+", ""); // "línea 1" → "1"
+        s = s.replaceAll("^l(?=\\d)", "");       // "L1"      → "1"
+        return s;
     }
 
     private static double round2(double value) {

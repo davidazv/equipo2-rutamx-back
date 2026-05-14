@@ -35,7 +35,7 @@ class Co2SavingsResourceTest {
                 .when().get("/api/co2-savings")
                 .then()
                 .statusCode(200)
-                .body("$.size()", equalTo(2));
+                .body("$.size()", equalTo(3));
     }
 
     @Test
@@ -77,13 +77,16 @@ class Co2SavingsResourceTest {
     }
 
     @Test
-    void shouldReturnFallbackDetallesWhenNoAfluenciaData() {
+    void shouldReturnDetallesPorDiaWithFallbackWhenNoAfluenciaData() {
+        // Routes with trips but no afluencia data use AVG_PASSENGERS_PER_TRIP (79) as fallback.
+        // detallesPorDia is only null when a route has no trips at all.
         given()
                 .queryParam("busModelId", 1)
                 .when().get("/api/co2-savings")
                 .then()
                 .statusCode(200)
-                .body("[0].detallesPorDia", notNullValue());
+                .body("find { it.routeId == 'TR13' }.detallesPorDia", notNullValue())
+                .body("find { it.routeId == 'TR13' }.detallesPorDia.lunes.pasajeros", equalTo(79.0f));
     }
 
     @Test

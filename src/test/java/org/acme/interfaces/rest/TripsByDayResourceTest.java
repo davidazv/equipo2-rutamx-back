@@ -24,7 +24,7 @@ class TripsByDayResourceTest {
                 .when().get("/api/routes/trips-by-day")
                 .then()
                 .statusCode(200)
-                .body("$.size()", equalTo(2));
+                .body("$.size()", equalTo(3));
     }
 
     @Test
@@ -53,8 +53,8 @@ class TripsByDayResourceTest {
                 .when().get("/api/routes/trips-by-day")
                 .then()
                 .statusCode(200)
-                .body("[0].calidadDatos", equalTo("Baja"))
-                .body("[0].demandaDiariaPromedio", nullValue());
+                .body("find { it.routeId == 'TEST_ROUTE' }.calidadDatos", equalTo("Baja"))
+                .body("find { it.routeId == 'TEST_ROUTE' }.demandaDiariaPromedio", nullValue());
     }
 
     @Test

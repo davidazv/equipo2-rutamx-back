@@ -79,7 +79,7 @@ class KpiResourceTest {
                 .when().get("/api/kpi/summary")
                 .then()
                 .statusCode(200)
-                .body("routesAnalyzed", equalTo(2));
+                .body("routesAnalyzed", equalTo(3));
     }
 
     @Test

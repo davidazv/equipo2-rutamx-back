@@ -6,7 +6,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.acme.domain.models.AfluenciaMetrobus;
 import org.acme.domain.models.AfluenciaResumen;
+import org.acme.domain.models.DayType;
 import org.acme.domain.repository.AfluenciaMetrobusRepository;
+
+import java.math.BigDecimal;
 import org.acme.infrastructure.entities.AfluenciaMetrobusEntity;
 import org.acme.infrastructure.mapper.AfluenciaMetrobusMapper;
 
@@ -81,6 +84,26 @@ public class AfluenciaMetrobusRepositoryImpl implements AfluenciaMetrobusReposit
     @Transactional
     public void deleteAll() {
         entityManager.createNativeQuery("DELETE FROM afluencia_metrobus").executeUpdate();
+    }
+
+    public BigDecimal findAverageDailyDemand(String linea, DayType dayType) {
+        String dayFilter = switch (dayType) {
+            case WEEKDAY  -> "DAYOFWEEK(fecha) BETWEEN 2 AND 6";
+            case SATURDAY -> "DAYOFWEEK(fecha) = 7";
+            case SUNDAY   -> "DAYOFWEEK(fecha) = 1";
+        };
+
+        String sql = "SELECT SUM(afluencia) / COUNT(DISTINCT fecha) " +
+                     "FROM afluencia_metrobus " +
+                     "WHERE linea = ?1 AND " + dayFilter;
+
+        Object result = entityManager.createNativeQuery(sql)
+                .setParameter(1, linea)
+                .getSingleResult();
+
+        if (result == null) return null;
+        if (result instanceof BigDecimal) return (BigDecimal) result;
+        return BigDecimal.valueOf(((Number) result).doubleValue());
     }
 
     @Override

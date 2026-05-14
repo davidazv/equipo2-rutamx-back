@@ -20,8 +20,9 @@ public class AfluenciaMetrobusRepositoryImpl implements AfluenciaMetrobusReposit
     EntityManager entityManager;
 
     private static final String AFLUENCIA_BY_LINEA_AND_DOW_QUERY =
-            "SELECT linea, DAYOFWEEK(fecha), SUM(afluencia) " +
+            "SELECT linea, DAYOFWEEK(fecha), AVG(afluencia) " +
             "FROM afluencia_metrobus " +
+            "WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR) " +
             "GROUP BY linea, DAYOFWEEK(fecha) " +
             "ORDER BY linea, DAYOFWEEK(fecha)";
 

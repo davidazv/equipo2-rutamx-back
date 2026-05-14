@@ -14,6 +14,8 @@ public interface RouteRepository {
     List<RouteGeometry> findByAgencyWithShapes(String agencyId);
     /** Returns per-route scheduled time (from GTFS stop_times) and frequency (from frequencies). */
     List<RouteTimeComparison> findAllWithTimeComparison();
+    /** Returns time comparison data for a single route. Used by HU12. */
+    Optional<RouteTimeComparison> findByIdWithTimeComparison(String routeId);
     void deleteAll();
     int createAll(List<Route> items);
 }

@@ -91,7 +91,12 @@ public class CalculateCo2SavingsUseCase {
         }
 
         double kwhPerKm = busModel.getEnergyConsumptionKwhKm().doubleValue();
-        double dieselLPerKm = EmissionConstants.DIESEL_LITERS_PER_100KM / 100.0;
+        List<BusModel> dieselModels = busModelRepository.findByFuelType(FuelType.DIESEL);
+        double dieselLPerKm = dieselModels.stream()
+                .filter(m -> m.getFuelConsumptionLKm() != null && m.getFuelConsumptionLKm().doubleValue() > 0)
+                .mapToDouble(m -> m.getFuelConsumptionLKm().doubleValue())
+                .average()
+                .orElse(EmissionConstants.DIESEL_LITERS_PER_100KM / 100.0);
         int annualMultiplier = FleetConstants.DAILY_TRIPS * FleetConstants.OPERATING_DAYS;
 
         List<Co2SavingsResult> results = new ArrayList<>();

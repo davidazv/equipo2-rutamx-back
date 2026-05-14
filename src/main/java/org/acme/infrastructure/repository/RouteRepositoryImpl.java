@@ -166,16 +166,6 @@ public class RouteRepositoryImpl implements RouteRepository {
             "GROUP BY r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type " +
             "HAVING MAX(s.shape_dist_traveled) > 0";
 
-    private static final String ROUTE_BY_AGENCY_SHORT_NAME_QUERY =
-            "SELECT r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type, " +
-            "MAX(s.shape_dist_traveled) AS distance_km " +
-            "FROM routes r " +
-            "INNER JOIN trips t ON t.route_id = r.route_id " +
-            "INNER JOIN shapes s ON s.shape_id = t.shape_id " +
-            "WHERE r.agency_id = ?1 AND r.route_short_name = ?2 " +
-            "GROUP BY r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type " +
-            "HAVING MAX(s.shape_dist_traveled) > 0";
-
     @Inject
     EntityManager entityManager;
 
@@ -191,18 +181,6 @@ public class RouteRepositoryImpl implements RouteRepository {
             routes.add(mapRow(row));
         }
         return routes;
-    }
-
-    @Override
-    public Optional<Route> findByAgencyAndShortName(String agencyId, String routeShortName) {
-        @SuppressWarnings("unchecked")
-        List<Object[]> results = entityManager
-                .createNativeQuery(ROUTE_BY_AGENCY_SHORT_NAME_QUERY)
-                .setParameter(1, agencyId)
-                .setParameter(2, routeShortName)
-                .getResultList();
-
-        return results.stream().findFirst().map(this::mapRow);
     }
 
     @Override

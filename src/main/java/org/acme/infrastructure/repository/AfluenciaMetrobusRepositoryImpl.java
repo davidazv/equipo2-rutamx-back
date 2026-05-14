@@ -86,6 +86,7 @@ public class AfluenciaMetrobusRepositoryImpl implements AfluenciaMetrobusReposit
         entityManager.createNativeQuery("DELETE FROM afluencia_metrobus").executeUpdate();
     }
 
+    @Override
     public BigDecimal findAverageDailyDemand(String linea, DayType dayType) {
         String dayFilter = switch (dayType) {
             case WEEKDAY  -> "DAYOFWEEK(fecha) BETWEEN 2 AND 6";

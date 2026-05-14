@@ -2,6 +2,8 @@ package org.acme.domain.repository;
 
 import org.acme.domain.models.AfluenciaMetrobus;
 import org.acme.domain.models.AfluenciaResumen;
+import org.acme.domain.models.DayType;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -15,4 +17,6 @@ public interface AfluenciaMetrobusRepository {
      * Used by HU12 (RecommendBusModelUseCase).
      */
     Map<String, Double> findAvgDemandByLinea(String linea);
+    /** Used by HU11 (RecommendBusCountUseCase). */
+    BigDecimal findAverageDailyDemand(String linea, DayType dayType);
 }

@@ -1,0 +1,40 @@
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back:$SHORT_SHA'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back:latest'
+      - '.'
+
+  # Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back'
+
+  # Deploy to Cloud Run
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -e
+        VERSION="$${TAG_NAME:-$${SHORT_SHA:-dev}}"
+        IMAGE="${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:$$VERSION"
+        gcloud run deploy ${_SERVICE} \
+          --image "$$IMAGE" \
+          --region ${_REGION} \
+          --platform managed \
+          --allow-unauthenticated
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back:latest'

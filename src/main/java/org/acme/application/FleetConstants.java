@@ -20,4 +20,8 @@ public final class FleetConstants {
 
     /** Reference average speed (km/h) used to compute estimated travel time per route (HU09). */
     public static final double REFERENCE_SPEED_KMH = 20.0;
+
+    public static final double PEAK_HOUR_FACTOR = 0.12;
+    public static final int DEFAULT_BUS_CAPACITY = 80;
+    public static final double DEFAULT_OCCUPANCY = 0.80;
 }

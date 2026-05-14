@@ -62,11 +62,9 @@ public class RecommendBusModelUseCase {
         log.info("Generating bus model recommendation for route=" + routeId
                 + " targetOccupancy=" + targetOccupancy);
 
-        // 1 — Fetch route with distance and frequency
         RouteTimeComparison route = routeRepository.findByIdWithTimeComparison(routeId)
                 .orElseThrow(() -> new RouteNotFoundException("Ruta no encontrada: " + routeId));
 
-        // 2 — Build the afluencia lookup key: "linea " + shortName (e.g. "linea 1")
         String lineaKey = "linea " + route.getRouteShortName().toLowerCase();
         Map<String, Double> demandMap = afluenciaRepository.findAvgDemandByLinea(lineaKey);
 
@@ -75,19 +73,16 @@ public class RecommendBusModelUseCase {
                     "No hay datos de afluencia para la ruta: " + routeId);
         }
 
-        // 3 — Build demand summary
         DemandSummary demand = new DemandSummary();
         demand.setAvgWeekday(Math.round(demandMap.getOrDefault("weekday", 0.0)));
         demand.setAvgSaturday(Math.round(demandMap.getOrDefault("saturday", 0.0)));
         demand.setAvgSunday(Math.round(demandMap.getOrDefault("sunday", 0.0)));
 
-        // 4 — Fetch all bus models once
         List<BusModel> models = busModelRepository.findAll();
 
         double distanceKm = route.getDistanceKm();
         int frequencyMinutes = route.getFrequencyMinutes();
 
-        // 5 — Build ranked recommendations for each day type
         RecommendationsByDay recs = new RecommendationsByDay();
         recs.setWeekday(buildDayRecommendation(demand.getAvgWeekday(), frequencyMinutes, distanceKm, targetOccupancy, models));
         recs.setSaturday(buildDayRecommendation(demand.getAvgSaturday(), frequencyMinutes, distanceKm, targetOccupancy, models));
@@ -104,8 +99,6 @@ public class RecommendBusModelUseCase {
 
         return result;
     }
-
-    // ── Private helpers ──────────────────────────────────────────────────────
 
     private DayRecommendation buildDayRecommendation(long avgDailyDemand,
                                                      int frequencyMinutes,

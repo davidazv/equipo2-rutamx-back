@@ -10,6 +10,7 @@ import org.acme.domain.repository.AfluenciaMetrobusRepository;
 import org.acme.infrastructure.entities.AfluenciaMetrobusEntity;
 import org.acme.infrastructure.mapper.AfluenciaMetrobusMapper;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class AfluenciaMetrobusRepositoryImpl implements AfluenciaMetrobusReposit
     private static final String AFLUENCIA_BY_LINEA_AND_DOW_QUERY =
             "SELECT linea, DAYOFWEEK(fecha), AVG(afluencia) " +
             "FROM afluencia_metrobus " +
-            "WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR) " +
+            "WHERE fecha >= :oneYearAgo " +
             "GROUP BY linea, DAYOFWEEK(fecha) " +
             "ORDER BY linea, DAYOFWEEK(fecha)";
 
@@ -31,6 +32,7 @@ public class AfluenciaMetrobusRepositoryImpl implements AfluenciaMetrobusReposit
         @SuppressWarnings("unchecked")
         List<Object[]> rows = entityManager
                 .createNativeQuery(AFLUENCIA_BY_LINEA_AND_DOW_QUERY)
+                .setParameter("oneYearAgo", LocalDate.now().minusYears(1))
                 .getResultList();
 
         List<AfluenciaResumen> result = new ArrayList<>();

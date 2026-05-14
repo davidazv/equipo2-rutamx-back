@@ -77,13 +77,13 @@ class Co2SavingsResourceTest {
     }
 
     @Test
-    void shouldReturnNullDetallesWhenNoAfluenciaData() {
+    void shouldReturnFallbackDetallesWhenNoAfluenciaData() {
         given()
                 .queryParam("busModelId", 1)
                 .when().get("/api/co2-savings")
                 .then()
                 .statusCode(200)
-                .body("[0].detallesPorDia", nullValue());
+                .body("[0].detallesPorDia", notNullValue());
     }
 
     @Test

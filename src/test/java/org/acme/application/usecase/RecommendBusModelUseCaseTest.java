@@ -1,10 +1,11 @@
 package org.acme.application.usecase;
 
-import org.acme.application.exception.DemandNotFoundException;
+import org.acme.application.exception.NoDemandDataException;
+import org.acme.application.exception.RouteNotFoundException;
 import org.acme.domain.models.BusModel;
+import org.acme.domain.models.BusModelRecommendation;
 import org.acme.domain.models.FuelType;
-import org.acme.domain.models.ModelRecommendation;
-import org.acme.domain.models.Route;
+import org.acme.domain.models.RouteTimeComparison;
 import org.acme.domain.repository.AfluenciaMetrobusRepository;
 import org.acme.domain.repository.BusModelRepository;
 import org.acme.domain.repository.RouteRepository;
@@ -13,169 +14,212 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-import static org.acme.domain.models.DayType.WEEKDAY;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class RecommendBusModelUseCaseTest {
 
-    private AfluenciaMetrobusRepository afluenciaRepository;
     private RouteRepository routeRepository;
+    private AfluenciaMetrobusRepository afluenciaRepository;
     private BusModelRepository busModelRepository;
     private RecommendBusModelUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        afluenciaRepository = mock(AfluenciaMetrobusRepository.class);
         routeRepository = mock(RouteRepository.class);
+        afluenciaRepository = mock(AfluenciaMetrobusRepository.class);
         busModelRepository = mock(BusModelRepository.class);
-        useCase = new RecommendBusModelUseCase(
-                afluenciaRepository, routeRepository, busModelRepository);
+        useCase = new RecommendBusModelUseCase(routeRepository, afluenciaRepository, busModelRepository);
     }
 
-    // -------------------------------------------------------------------------
-    // Helper methods
-    // -------------------------------------------------------------------------
+    // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private Route buildRoute(String id, double distanceKm) {
-        Route r = new Route();
-        r.setRouteId(id);
-        r.setAgencyId("MB");
-        r.setRouteShortName("1");
+    private RouteTimeComparison buildRoute(String routeId, String shortName,
+                                           double distanceKm, int frequencyMinutes) {
+        RouteTimeComparison r = new RouteTimeComparison();
+        r.setRouteId(routeId);
+        r.setRouteShortName(shortName);
+        r.setRouteLongName("Ruta " + shortName);
         r.setDistanceKm(distanceKm);
+        r.setFrequencyMinutes(frequencyMinutes);
         return r;
     }
 
-    private BusModel buildElectricModel(Long id, String name, int capacity, double autonomy, double cost) {
+    private BusModel buildModel(Long id, int capacity, double autonomyKm, double costUsd) {
         BusModel m = new BusModel();
         m.setId(id);
-        m.setName(name);
+        m.setName("Bus-" + id);
         m.setManufacturer("TestMfg");
         m.setFuelType(FuelType.ELECTRIC);
         m.setPassengerCapacity(capacity);
-        m.setAutonomyKm(BigDecimal.valueOf(autonomy));
-        m.setUnitCostUsd(BigDecimal.valueOf(cost));
+        m.setAutonomyKm(BigDecimal.valueOf(autonomyKm));
+        m.setUnitCostUsd(BigDecimal.valueOf(costUsd));
         return m;
     }
 
-    // -------------------------------------------------------------------------
-    // Tests
-    // -------------------------------------------------------------------------
+    // ── Happy path ───────────────────────────────────────────────────────────
 
     @Test
-    void executeShouldReturnRecommendationWithExplicitFleetSize() {
-        // demand=5000, peakHour=600, fleetSize=10, occ=0.80
-        // requiredCap = CEIL(600 / (10 * 0.80)) = CEIL(75) = 75
-        when(afluenciaRepository.findAverageDailyDemand("linea 1", WEEKDAY))
-                .thenReturn(new BigDecimal("5000"));
-        when(routeRepository.findByAgencyAndShortName("MB", "1"))
-                .thenReturn(Optional.of(buildRoute("route-1", 30)));
+    void executeShouldReturnRecommendationForAllDayTypes() {
+        // freq=3min → busesPerHour=20; weekday demand=5000
+        // peakHour = round(5000 * 0.12) = 600
+        // reqCap   = ceil(600 / (20 * 0.80)) = ceil(37.5) = 38
+        when(routeRepository.findByIdWithTimeComparison("route-1"))
+                .thenReturn(Optional.of(buildRoute("route-1", "1", 30, 3)));
+        when(afluenciaRepository.findAvgDemandByLinea("linea 1"))
+                .thenReturn(Map.of("weekday", 5000.0, "saturday", 3000.0, "sunday", 2000.0));
+        when(busModelRepository.findAll())
+                .thenReturn(List.of(buildModel(1L, 85, 300, 420_000)));
 
-        BusModel large = buildElectricModel(1L, "LargeBus", 85, 300, 420000);
-        BusModel small = buildElectricModel(2L, "SmallBus", 50, 130, 300000);
-        when(busModelRepository.findByFuelType(FuelType.ELECTRIC))
-                .thenReturn(List.of(large, small));
+        BusModelRecommendation result = useCase.execute("route-1", 0.80);
 
-        ModelRecommendation result = useCase.execute("linea 1", "weekday", 80, 10);
-
-        assertEquals(75, result.getRequiredCapacity());
-        // large (cap=85 >= 75) eligible, small (cap=50 < 75) not
-        assertEquals(1, result.getModels().size());
-        assertEquals(1L, result.getModels().get(0).getId());
+        assertNotNull(result.getRecommendations().getWeekday());
+        assertNotNull(result.getRecommendations().getSaturday());
+        assertNotNull(result.getRecommendations().getSunday());
+        assertEquals(38, result.getRecommendations().getWeekday().getRequiredCapacity());
+        assertEquals("route-1", result.getRouteId());
     }
 
     @Test
-    void executeShouldThrowWhenNoDataForLinea() {
-        when(afluenciaRepository.findAverageDailyDemand("linea 1", WEEKDAY))
-                .thenReturn(null);
+    void executeShouldComputePeakHourDemandFromDailyAverage() {
+        // weekday=10000 → peakHour = round(10000 * 0.12) = 1200
+        when(routeRepository.findByIdWithTimeComparison("route-1"))
+                .thenReturn(Optional.of(buildRoute("route-1", "1", 30, 3)));
+        when(afluenciaRepository.findAvgDemandByLinea("linea 1"))
+                .thenReturn(Map.of("weekday", 10_000.0, "saturday", 0.0, "sunday", 0.0));
+        when(busModelRepository.findAll()).thenReturn(List.of());
 
-        assertThrows(DemandNotFoundException.class,
-                () -> useCase.execute("linea 1", "weekday", 80, 10));
+        BusModelRecommendation result = useCase.execute("route-1", 0.80);
+
+        assertEquals(1200L, result.getRecommendations().getWeekday().getPeakHourDemand());
     }
 
     @Test
-    void executeShouldReturnEmptyModelsWhenNoneEligible() {
-        // demand=100000, peakHour=12000, fleetSize=5
-        // requiredCap = CEIL(12000 / (5 * 0.80)) = 3000 -> model cap 50 too small
-        when(afluenciaRepository.findAverageDailyDemand("linea 1", WEEKDAY))
-                .thenReturn(new BigDecimal("100000"));
-        when(routeRepository.findByAgencyAndShortName("MB", "1"))
-                .thenReturn(Optional.of(buildRoute("route-1", 30)));
+    void executeShouldUseDefaultBusesPerHourWhenFrequencyIsZero() {
+        // freq=0 → DEFAULT_BUSES_PER_HOUR=10; demand=5000
+        // reqCap = ceil(600 / (10 * 0.80)) = ceil(75) = 75
+        when(routeRepository.findByIdWithTimeComparison("route-1"))
+                .thenReturn(Optional.of(buildRoute("route-1", "1", 30, 0)));
+        when(afluenciaRepository.findAvgDemandByLinea("linea 1"))
+                .thenReturn(Map.of("weekday", 5000.0, "saturday", 0.0, "sunday", 0.0));
+        when(busModelRepository.findAll())
+                .thenReturn(List.of(buildModel(1L, 85, 300, 420_000)));
 
-        BusModel small = buildElectricModel(1L, "SmallBus", 50, 300, 200000);
-        when(busModelRepository.findByFuelType(FuelType.ELECTRIC))
-                .thenReturn(List.of(small));
+        BusModelRecommendation result = useCase.execute("route-1", 0.80);
 
-        ModelRecommendation result = useCase.execute("linea 1", "weekday", 80, 5);
+        assertEquals(75, result.getRecommendations().getWeekday().getRequiredCapacity());
+    }
 
-        assertTrue(result.getModels().isEmpty());
+    // ── Ranking ──────────────────────────────────────────────────────────────
+
+    @Test
+    void executeShouldMarkCheapestEligibleModelAsRecommended() {
+        // Both meet reqCap=38 and minAutonomy=60km; cheaper one (id=2) wins
+        when(routeRepository.findByIdWithTimeComparison("route-1"))
+                .thenReturn(Optional.of(buildRoute("route-1", "1", 30, 3)));
+        when(afluenciaRepository.findAvgDemandByLinea("linea 1"))
+                .thenReturn(Map.of("weekday", 5000.0, "saturday", 0.0, "sunday", 0.0));
+
+        BusModel expensive = buildModel(1L, 90, 300, 600_000);
+        BusModel cheap     = buildModel(2L, 80, 300, 300_000);
+        when(busModelRepository.findAll()).thenReturn(List.of(expensive, cheap));
+
+        BusModelRecommendation result = useCase.execute("route-1", 0.80);
+
+        var models = result.getRecommendations().getWeekday().getModels();
+        assertTrue(models.stream().filter(m -> m.getModel().getId() == 2L).findFirst().orElseThrow().isRecommended());
+        assertFalse(models.stream().filter(m -> m.getModel().getId() == 1L).findFirst().orElseThrow().isRecommended());
     }
 
     @Test
-    void executeShouldMarkCheapestEligibleAsRecommended() {
-        // demand=5000, peakHour=600, fleetSize=10 -> requiredCap=75
-        when(afluenciaRepository.findAverageDailyDemand("linea 1", WEEKDAY))
-                .thenReturn(new BigDecimal("5000"));
-        when(routeRepository.findByAgencyAndShortName("MB", "1"))
-                .thenReturn(Optional.of(buildRoute("route-1", 30)));
+    void executeShouldMarkNoModelAsRecommendedWhenNoneEligible() {
+        // demand=100000 → peakHour=12000, freq=0 → busesPerHour=10
+        // reqCap = ceil(12000/(10*0.80)) = 1500 → cap=50 too small
+        when(routeRepository.findByIdWithTimeComparison("route-1"))
+                .thenReturn(Optional.of(buildRoute("route-1", "1", 30, 0)));
+        when(afluenciaRepository.findAvgDemandByLinea("linea 1"))
+                .thenReturn(Map.of("weekday", 100_000.0, "saturday", 0.0, "sunday", 0.0));
+        when(busModelRepository.findAll())
+                .thenReturn(List.of(buildModel(1L, 50, 300, 200_000)));
 
-        BusModel expensive = buildElectricModel(1L, "ExpensiveBus", 90, 300, 600000);
-        BusModel cheap = buildElectricModel(2L, "CheapBus", 80, 300, 300000);
-        when(busModelRepository.findByFuelType(FuelType.ELECTRIC))
-                .thenReturn(List.of(expensive, cheap));
+        BusModelRecommendation result = useCase.execute("route-1", 0.80);
 
-        ModelRecommendation result = useCase.execute("linea 1", "weekday", 80, 10);
-
-        assertEquals(2, result.getModels().size());
-        ModelRecommendation.ModelCandidate cheapCandidate = result.getModels().stream()
-                .filter(c -> c.getId() == 2L)
-                .findFirst()
-                .orElseThrow();
-        assertTrue(cheapCandidate.isRecommended());
-
-        ModelRecommendation.ModelCandidate expensiveCandidate = result.getModels().stream()
-                .filter(c -> c.getId() == 1L)
-                .findFirst()
-                .orElseThrow();
-        assertFalse(expensiveCandidate.isRecommended());
+        assertTrue(result.getRecommendations().getWeekday().getModels()
+                .stream().noneMatch(m -> m.isRecommended()));
     }
 
     @Test
-    void executeShouldFilterByAutonomyRequirement() {
-        // routeDistance=100km -> autonomy required >= 200km
-        when(afluenciaRepository.findAverageDailyDemand("linea 1", WEEKDAY))
-                .thenReturn(new BigDecimal("5000"));
-        when(routeRepository.findByAgencyAndShortName("MB", "1"))
-                .thenReturn(Optional.of(buildRoute("route-1", 100)));
+    void executeShouldExcludeModelsWithInsufficientAutonomy() {
+        // distance=100km → minAutonomy=200km; shortRange (150km) not eligible
+        when(routeRepository.findByIdWithTimeComparison("route-1"))
+                .thenReturn(Optional.of(buildRoute("route-1", "1", 100, 3)));
+        when(afluenciaRepository.findAvgDemandByLinea("linea 1"))
+                .thenReturn(Map.of("weekday", 5000.0, "saturday", 0.0, "sunday", 0.0));
 
-        BusModel shortRange = buildElectricModel(1L, "ShortRange", 90, 150, 300000);
-        BusModel longRange = buildElectricModel(2L, "LongRange", 90, 300, 400000);
-        when(busModelRepository.findByFuelType(FuelType.ELECTRIC))
-                .thenReturn(List.of(shortRange, longRange));
+        BusModel shortRange = buildModel(1L, 90, 150, 300_000);
+        BusModel longRange  = buildModel(2L, 90, 300, 400_000);
+        when(busModelRepository.findAll()).thenReturn(List.of(shortRange, longRange));
 
-        ModelRecommendation result = useCase.execute("linea 1", "weekday", 80, 10);
+        BusModelRecommendation result = useCase.execute("route-1", 0.80);
 
-        assertEquals(1, result.getModels().size());
-        assertEquals(2L, result.getModels().get(0).getId());
+        var models = result.getRecommendations().getWeekday().getModels();
+        assertFalse(models.stream().filter(m -> m.getModel().getId() == 1L).findFirst().orElseThrow().isMeetsAutonomy());
+        assertTrue(models.stream().filter(m -> m.getModel().getId() == 2L).findFirst().orElseThrow().isRecommended());
     }
 
     @Test
-    void executeShouldUseDefaultFleetSizeWhenNull() {
-        // null fleetSize -> default = CEIL(peakHour / (80 * occupancy))
-        // demand=5000, peakHour=600, default fleet = CEIL(600/64) = 10
-        // requiredCap = CEIL(600 / (10 * 0.80)) = CEIL(75) = 75
-        when(afluenciaRepository.findAverageDailyDemand("linea 1", WEEKDAY))
-                .thenReturn(new BigDecimal("5000"));
-        when(routeRepository.findByAgencyAndShortName("MB", "1"))
-                .thenReturn(Optional.of(buildRoute("route-1", 30)));
-        when(busModelRepository.findByFuelType(FuelType.ELECTRIC))
-                .thenReturn(List.of(buildElectricModel(1L, "Bus", 85, 300, 420000)));
+    void executeShouldSetRankStartingAtOne() {
+        when(routeRepository.findByIdWithTimeComparison("route-1"))
+                .thenReturn(Optional.of(buildRoute("route-1", "1", 30, 3)));
+        when(afluenciaRepository.findAvgDemandByLinea("linea 1"))
+                .thenReturn(Map.of("weekday", 5000.0, "saturday", 0.0, "sunday", 0.0));
+        when(busModelRepository.findAll())
+                .thenReturn(List.of(buildModel(1L, 85, 300, 420_000),
+                                    buildModel(2L, 90, 300, 500_000)));
 
-        ModelRecommendation result = useCase.execute("linea 1", null, null, null);
+        BusModelRecommendation result = useCase.execute("route-1", 0.80);
 
-        // default fleet=10, reqCap=75
-        assertEquals(75, result.getRequiredCapacity());
+        var models = result.getRecommendations().getWeekday().getModels();
+        assertEquals(1, models.get(0).getRank());
+        assertEquals(2, models.get(1).getRank());
+    }
+
+    @Test
+    void executeShouldIncludeJustificationOnEachModel() {
+        when(routeRepository.findByIdWithTimeComparison("route-1"))
+                .thenReturn(Optional.of(buildRoute("route-1", "1", 30, 3)));
+        when(afluenciaRepository.findAvgDemandByLinea("linea 1"))
+                .thenReturn(Map.of("weekday", 5000.0, "saturday", 0.0, "sunday", 0.0));
+        when(busModelRepository.findAll())
+                .thenReturn(List.of(buildModel(1L, 85, 300, 420_000)));
+
+        BusModelRecommendation result = useCase.execute("route-1", 0.80);
+
+        assertNotNull(result.getRecommendations().getWeekday().getModels().get(0).getJustification());
+    }
+
+    // ── Error cases ──────────────────────────────────────────────────────────
+
+    @Test
+    void executeShouldThrowRouteNotFoundExceptionWhenRouteDoesNotExist() {
+        when(routeRepository.findByIdWithTimeComparison("NONEXISTENT"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(RouteNotFoundException.class,
+                () -> useCase.execute("NONEXISTENT", 0.80));
+    }
+
+    @Test
+    void executeShouldThrowNoDemandDataExceptionWhenDemandMapIsEmpty() {
+        when(routeRepository.findByIdWithTimeComparison("route-1"))
+                .thenReturn(Optional.of(buildRoute("route-1", "1", 30, 3)));
+        when(afluenciaRepository.findAvgDemandByLinea("linea 1"))
+                .thenReturn(Map.of());
+
+        assertThrows(NoDemandDataException.class,
+                () -> useCase.execute("route-1", 0.80));
     }
 }

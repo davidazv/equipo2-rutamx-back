@@ -23,12 +23,21 @@ public class TestFirebaseAuthFilter extends FirebaseAuthFilter {
 
     @Override
     public void filter(ContainerRequestContext ctx) {
+        String path = ctx.getUriInfo().getPath();
         User testUser = new User();
         testUser.setId(1L);
-        testUser.setEmail("admin@rutamx.com");
-        testUser.setFirebaseUuid("seed-admin-placeholder");
-        testUser.setRoleName("ADMIN");
         testUser.setStatus(UserStatus.ACTIVE);
+
+        if (path.startsWith("/api/reports")) {
+            testUser.setEmail("cmo@rutamx.com");
+            testUser.setFirebaseUuid("seed-cmo-placeholder");
+            testUser.setRoleName("CMO");
+        } else {
+            testUser.setEmail("admin@rutamx.com");
+            testUser.setFirebaseUuid("seed-admin-placeholder");
+            testUser.setRoleName("ADMIN");
+        }
+
         authContext.setUser(testUser);
     }
 }

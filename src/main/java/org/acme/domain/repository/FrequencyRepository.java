@@ -6,4 +6,5 @@ import java.util.List;
 public interface FrequencyRepository {
     void deleteAll();
     int createAll(List<Frequency> items);
+    List<Frequency> findAll();
 }

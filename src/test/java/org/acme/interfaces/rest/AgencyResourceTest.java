@@ -17,7 +17,7 @@ class AgencyResourceTest {
                 .statusCode(200)
                 .body("$.size()", equalTo(3))
                 .body("agencyId", hasItems("SEMOVI", "TROLE", "MB"))
-                .body("agencyName", hasItems("SEMOVI", "Servicio de Transportes Electricos"));
+                .body("agencyName", hasItems("SEMOVI", "Servicio de Transportes Electricos", "Metrobús"));
     }
 
     @Test

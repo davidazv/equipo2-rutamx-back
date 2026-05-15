@@ -36,7 +36,8 @@ public class SuspendUserUseCase {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
 
-        if (authContext.getUser().getId().equals(id)) {
+        User caller = authContext.getUser();
+        if (caller != null && caller.getId().equals(id)) {
             throw new IllegalArgumentException("No puedes suspender tu propia cuenta");
         }
 

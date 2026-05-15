@@ -22,6 +22,10 @@ public class FirebaseUserCreator {
         return decoded.getUid();
     }
 
+    public FirebaseToken verifyIdTokenFull(String token) throws FirebaseAuthException {
+        return FirebaseAuth.getInstance().verifyIdToken(token);
+    }
+
     public void deleteUser(String firebaseUuid) throws FirebaseAuthException {
         FirebaseAuth.getInstance().deleteUser(firebaseUuid);
     }

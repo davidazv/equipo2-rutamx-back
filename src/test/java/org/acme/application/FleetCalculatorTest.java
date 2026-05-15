@@ -140,4 +140,17 @@ class FleetCalculatorTest {
     void co2AvoidedTonsShouldReturnZeroWithZeroEmissions() {
         assertEquals(0.0, FleetCalculator.co2AvoidedTons(1, 62000, 0), 0.01);
     }
+
+    // ── dieselLitersPerYear ────────────────────────────────────────
+
+    @Test
+    void dieselLitersPerYearShouldComputeCorrectly() {
+        // 10 * 62000 * 0.35 = 217_000
+        assertEquals(217_000.0, FleetCalculator.dieselLitersPerYear(10, 62000, 0.35), 0.01);
+    }
+
+    @Test
+    void dieselLitersPerYearShouldReturnZeroWhenZeroBuses() {
+        assertEquals(0.0, FleetCalculator.dieselLitersPerYear(0, 62000, 0.35), 0.01);
+    }
 }

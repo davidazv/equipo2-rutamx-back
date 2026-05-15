@@ -36,6 +36,8 @@ public class CreateUserUseCase {
         try {
             firebaseUuid = firebaseUserCreator.create(dto.getEmail(), dto.getPassword());
         } catch (Exception e) {
+            log.severe("Firebase error creating user '" + dto.getEmail() + "': " + e.getMessage() +
+                    (e.getCause() != null ? " | cause: " + e.getCause().getMessage() : ""));
             if (e.getMessage() != null && e.getMessage().contains("EMAIL_ALREADY_EXISTS")) {
                 throw new DuplicateEmailException("El correo ya está registrado");
             }

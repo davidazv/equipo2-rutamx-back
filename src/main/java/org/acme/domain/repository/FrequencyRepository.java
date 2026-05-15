@@ -6,5 +6,4 @@ import java.util.List;
 public interface FrequencyRepository {
     void deleteAll();
     int createAll(List<Frequency> items);
-    Double findAverageHeadwayByRouteShortName(String routeShortName);
 }

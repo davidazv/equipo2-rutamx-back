@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.acme.domain.models.Route;
 import org.acme.domain.models.RouteGeometry;
+import org.acme.domain.models.RouteTimeComparison;
 import org.acme.domain.repository.RouteRepository;
 import org.acme.infrastructure.entities.AgencyEntity;
 import org.acme.infrastructure.entities.RouteEntity;
@@ -52,6 +53,109 @@ public class RouteRepositoryImpl implements RouteRepository {
             "WHERE r.agency_id = ?1 " +
             "ORDER BY r.route_id, s.shape_pt_sequence";
 
+    // Scheduled time: MAX trip duration gives the full end-to-end trip (not a short partial trip).
+    // Frequency: AVG headway from frequencies.txt when available; otherwise derived from the span
+    // between the first and last trip departure on a weekday divided by (trips - 1).
+    private static final String ROUTES_WITH_TIME_QUERY =
+            "SELECT " +
+            "    r.route_id, " +
+            "    r.agency_id, " +
+            "    r.route_short_name, " +
+            "    r.route_long_name, " +
+            "    MAX(s.shape_dist_traveled)           AS distance_km, " +
+            "    COALESCE(sched.scheduled_minutes, 0) AS scheduled_time_minutes, " +
+            "    COALESCE(freq.frequency_minutes, trips_freq.frequency_minutes, 0) AS frequency_minutes " +
+            "FROM routes r " +
+            "INNER JOIN trips t  ON t.route_id = r.route_id " +
+            "INNER JOIN shapes s ON s.shape_id  = t.shape_id " +
+            "LEFT JOIN ( " +
+            "    SELECT t2.route_id, " +
+            "           MAX(trip_sched.sched_mins) AS scheduled_minutes " +
+            "    FROM trips t2 " +
+            "    INNER JOIN ( " +
+            "        SELECT trip_id, " +
+            "               ROUND((TIME_TO_SEC(MAX(arrival_time)) " +
+            "                    - TIME_TO_SEC(MIN(departure_time))) / 60) AS sched_mins " +
+            "        FROM stop_times " +
+            "        GROUP BY trip_id " +
+            "    ) trip_sched ON trip_sched.trip_id = t2.trip_id " +
+            "    GROUP BY t2.route_id " +
+            ") sched ON sched.route_id = r.route_id " +
+            "LEFT JOIN ( " +
+            "    SELECT t3.route_id, " +
+            "           ROUND(AVG(f.headway_secs) / 60) AS frequency_minutes " +
+            "    FROM trips t3 " +
+            "    INNER JOIN frequencies f ON f.trip_id = t3.trip_id " +
+            "    GROUP BY t3.route_id " +
+            ") freq ON freq.route_id = r.route_id " +
+            "LEFT JOIN ( " +
+            "    SELECT t4.route_id, " +
+            "           GREATEST(1, ROUND( " +
+            "               (TIME_TO_SEC(MAX(fd.dep_time)) - TIME_TO_SEC(MIN(fd.dep_time))) " +
+            "               / GREATEST(COUNT(DISTINCT t4.trip_id) - 1, 1) / 60 " +
+            "           )) AS frequency_minutes " +
+            "    FROM trips t4 " +
+            "    INNER JOIN calendar c4 ON c4.service_id = t4.service_id AND c4.monday = 1 " +
+            "    INNER JOIN ( " +
+            "        SELECT trip_id, MIN(departure_time) AS dep_time " +
+            "        FROM stop_times WHERE stop_sequence = 1 " +
+            "        GROUP BY trip_id " +
+            "    ) fd ON fd.trip_id = t4.trip_id " +
+            "    GROUP BY t4.route_id " +
+            "    HAVING COUNT(DISTINCT t4.trip_id) > 1 " +
+            ") trips_freq ON trips_freq.route_id = r.route_id " +
+            "GROUP BY r.route_id, r.agency_id, r.route_short_name, r.route_long_name, " +
+            "         sched.scheduled_minutes, freq.frequency_minutes, trips_freq.frequency_minutes " +
+            "HAVING MAX(s.shape_dist_traveled) > 0 " +
+            "ORDER BY r.route_short_name";
+
+    private static final String ROUTE_BY_ID_WITH_TIME_QUERY =
+            "SELECT " +
+            "    r.route_id, r.agency_id, r.route_short_name, r.route_long_name, " +
+            "    MAX(s.shape_dist_traveled) AS distance_km, " +
+            "    COALESCE(sched.scheduled_minutes, 0) AS scheduled_time_minutes, " +
+            "    COALESCE(freq.frequency_minutes, trips_freq.frequency_minutes, 0) AS frequency_minutes " +
+            "FROM routes r " +
+            "INNER JOIN trips t ON t.route_id = r.route_id " +
+            "INNER JOIN shapes s ON s.shape_id = t.shape_id " +
+            "LEFT JOIN ( " +
+            "    SELECT t2.route_id, MAX(trip_sched.sched_mins) AS scheduled_minutes " +
+            "    FROM trips t2 " +
+            "    INNER JOIN ( " +
+            "        SELECT trip_id, " +
+            "               ROUND((TIME_TO_SEC(MAX(arrival_time)) " +
+            "                    - TIME_TO_SEC(MIN(departure_time))) / 60) AS sched_mins " +
+            "        FROM stop_times GROUP BY trip_id " +
+            "    ) trip_sched ON trip_sched.trip_id = t2.trip_id " +
+            "    GROUP BY t2.route_id " +
+            ") sched ON sched.route_id = r.route_id " +
+            "LEFT JOIN ( " +
+            "    SELECT t3.route_id, ROUND(AVG(f.headway_secs) / 60) AS frequency_minutes " +
+            "    FROM trips t3 " +
+            "    INNER JOIN frequencies f ON f.trip_id = t3.trip_id " +
+            "    GROUP BY t3.route_id " +
+            ") freq ON freq.route_id = r.route_id " +
+            "LEFT JOIN ( " +
+            "    SELECT t4.route_id, " +
+            "           GREATEST(1, ROUND( " +
+            "               (TIME_TO_SEC(MAX(fd.dep_time)) - TIME_TO_SEC(MIN(fd.dep_time))) " +
+            "               / GREATEST(COUNT(DISTINCT t4.trip_id) - 1, 1) / 60 " +
+            "           )) AS frequency_minutes " +
+            "    FROM trips t4 " +
+            "    INNER JOIN calendar c4 ON c4.service_id = t4.service_id AND c4.monday = 1 " +
+            "    INNER JOIN ( " +
+            "        SELECT trip_id, MIN(departure_time) AS dep_time " +
+            "        FROM stop_times WHERE stop_sequence = 1 " +
+            "        GROUP BY trip_id " +
+            "    ) fd ON fd.trip_id = t4.trip_id " +
+            "    GROUP BY t4.route_id " +
+            "    HAVING COUNT(DISTINCT t4.trip_id) > 1 " +
+            ") trips_freq ON trips_freq.route_id = r.route_id " +
+            "WHERE r.route_id = ?1 " +
+            "GROUP BY r.route_id, r.agency_id, r.route_short_name, r.route_long_name, " +
+            "         sched.scheduled_minutes, freq.frequency_minutes, trips_freq.frequency_minutes " +
+            "HAVING MAX(s.shape_dist_traveled) > 0";
+
     private static final String ROUTE_BY_ID_WITH_DISTANCE_QUERY =
             "SELECT r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type, " +
             "MAX(s.shape_dist_traveled) AS distance_km " +
@@ -59,16 +163,6 @@ public class RouteRepositoryImpl implements RouteRepository {
             "INNER JOIN trips t ON t.route_id = r.route_id " +
             "INNER JOIN shapes s ON s.shape_id = t.shape_id " +
             "WHERE r.route_id = ?1 " +
-            "GROUP BY r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type " +
-            "HAVING MAX(s.shape_dist_traveled) > 0";
-
-    private static final String ROUTE_BY_AGENCY_SHORT_NAME_QUERY =
-            "SELECT r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type, " +
-            "MAX(s.shape_dist_traveled) AS distance_km " +
-            "FROM routes r " +
-            "INNER JOIN trips t ON t.route_id = r.route_id " +
-            "INNER JOIN shapes s ON s.shape_id = t.shape_id " +
-            "WHERE r.agency_id = ?1 AND r.route_short_name = ?2 " +
             "GROUP BY r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type " +
             "HAVING MAX(s.shape_dist_traveled) > 0";
 
@@ -90,18 +184,6 @@ public class RouteRepositoryImpl implements RouteRepository {
     }
 
     @Override
-    public Optional<Route> findByAgencyAndShortName(String agencyId, String routeShortName) {
-        @SuppressWarnings("unchecked")
-        List<Object[]> results = entityManager
-                .createNativeQuery(ROUTE_BY_AGENCY_SHORT_NAME_QUERY)
-                .setParameter(1, agencyId)
-                .setParameter(2, routeShortName)
-                .getResultList();
-
-        return results.stream().findFirst().map(this::mapRow);
-    }
-
-    @Override
     public Optional<Route> findByIdWithDistance(String routeId) {
         @SuppressWarnings("unchecked")
         List<Object[]> results = entityManager
@@ -110,6 +192,29 @@ public class RouteRepositoryImpl implements RouteRepository {
                 .getResultList();
 
         return results.stream().findFirst().map(this::mapRow);
+    }
+
+    @Override
+    public Optional<RouteTimeComparison> findByIdWithTimeComparison(String routeId) {
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = entityManager
+                .createNativeQuery(ROUTE_BY_ID_WITH_TIME_QUERY)
+                .setParameter(1, routeId)
+                .getResultList();
+
+        return results.stream().findFirst().map(row -> {
+            RouteTimeComparison r = new RouteTimeComparison();
+            r.setRouteId((String) row[0]);
+            r.setAgencyId((String) row[1]);
+            r.setRouteShortName((String) row[2]);
+            r.setRouteLongName((String) row[3]);
+            r.setDistanceKm(row[4] instanceof BigDecimal
+                    ? ((BigDecimal) row[4]).doubleValue()
+                    : ((Number) row[4]).doubleValue());
+            r.setScheduledTimeMinutes(((Number) row[5]).intValue());
+            r.setFrequencyMinutes(((Number) row[6]).intValue());
+            return r;
+        });
     }
 
     @Override
@@ -161,6 +266,30 @@ public class RouteRepositoryImpl implements RouteRepository {
                 .getResultList();
 
         return buildRouteGeometries(results);
+    }
+
+    @Override
+    public List<RouteTimeComparison> findAllWithTimeComparison() {
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = entityManager
+                .createNativeQuery(ROUTES_WITH_TIME_QUERY)
+                .getResultList();
+
+        List<RouteTimeComparison> list = new ArrayList<>();
+        for (Object[] row : results) {
+            RouteTimeComparison r = new RouteTimeComparison();
+            r.setRouteId((String) row[0]);
+            r.setAgencyId((String) row[1]);
+            r.setRouteShortName((String) row[2]);
+            r.setRouteLongName((String) row[3]);
+            r.setDistanceKm(row[4] instanceof BigDecimal
+                    ? ((BigDecimal) row[4]).doubleValue()
+                    : ((Number) row[4]).doubleValue());
+            r.setScheduledTimeMinutes(((Number) row[5]).intValue());
+            r.setFrequencyMinutes(((Number) row[6]).intValue());
+            list.add(r);
+        }
+        return list;
     }
 
     private Route mapRow(Object[] row) {

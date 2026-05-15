@@ -38,16 +38,6 @@ public class BusModelRepositoryImpl implements BusModelRepository {
     }
 
     @Override
-    public Optional<BusModel> findByName(String name) {
-        return entityManager
-                .createQuery("SELECT b FROM BusModelEntity b WHERE b.name = :name", BusModelEntity.class)
-                .setParameter("name", name)
-                .getResultStream()
-                .findFirst()
-                .map(BusModelMapper::toDomain);
-    }
-
-    @Override
     public List<BusModel> findByFuelType(FuelType fuelType) {
         return entityManager
                 .createQuery("SELECT b FROM BusModelEntity b WHERE b.fuelType = :fuelType ORDER BY b.id",
@@ -67,26 +57,6 @@ public class BusModelRepositoryImpl implements BusModelRepository {
 
     @Override
     @Transactional
-    public void deleteById(Long id) {
-        BusModelEntity entity = entityManager.find(BusModelEntity.class, id);
-        if (entity != null) {
-            entityManager.remove(entity);
-        }
-    }
-
-    @Override
-    @Transactional
-    public BusModel create(BusModel model) {
-        BusModelEntity entity = BusModelMapper.toEntity(model);
-        entity.setCreatedAt(LocalDateTime.now());
-        entity.setUpdatedAt(LocalDateTime.now());
-        entityManager.persist(entity);
-        entityManager.flush();
-        return BusModelMapper.toDomain(entity);
-    }
-
-    @Override
-    @Transactional
     public int createAll(List<BusModel> items) {
         int count = 0;
         for (BusModel item : items) {
@@ -100,21 +70,5 @@ public class BusModelRepositoryImpl implements BusModelRepository {
             }
         }
         return count;
-    }
-
-    @Override
-    @Transactional
-    public BusModel update(BusModel model) {
-        BusModelEntity entity = entityManager.find(BusModelEntity.class, model.getId());
-        if (entity == null) {
-            return null;
-        }
-        if (model.getName() != null) entity.setName(model.getName());
-        if (model.getAutonomyKm() != null) entity.setAutonomyKm(model.getAutonomyKm());
-        if (model.getPassengerCapacity() != null) entity.setPassengerCapacity(model.getPassengerCapacity());
-        if (model.getUnitCostUsd() != null) entity.setUnitCostUsd(model.getUnitCostUsd());
-        entity.setUpdatedAt(LocalDateTime.now());
-        entityManager.flush();
-        return BusModelMapper.toDomain(entity);
     }
 }

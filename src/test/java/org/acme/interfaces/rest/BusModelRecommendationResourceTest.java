@@ -138,6 +138,64 @@ class BusModelRecommendationResourceTest {
                 .body("recommendations.weekday.models[0].model.passengerCapacity", notNullValue());
     }
 
+    @Test
+    void shouldReturnModelsForSaturdayAndSunday() {
+        given()
+                .when().get("/api/routes/" + MB_ROUTE + "/bus-model-recommendation")
+                .then()
+                .statusCode(200)
+                .body("recommendations.saturday.models.size()", greaterThanOrEqualTo(1))
+                .body("recommendations.sunday.models.size()", greaterThanOrEqualTo(1));
+    }
+
+    @Test
+    void shouldAssignSequentialRanksFrom1To6() {
+        io.restassured.response.Response response = given()
+                .when().get("/api/routes/" + MB_ROUTE + "/bus-model-recommendation")
+                .then().statusCode(200).extract().response();
+
+        java.util.List<Integer> ranks = response.jsonPath()
+                .getList("recommendations.weekday.models.rank");
+
+        for (int i = 0; i < ranks.size(); i++) {
+            org.junit.jupiter.api.Assertions.assertEquals(i + 1, ranks.get(i),
+                    "Expected rank " + (i + 1) + " at index " + i + ", got " + ranks.get(i));
+        }
+    }
+
+    @Test
+    void shouldIncludeJustificationMentioningCapacityAndAutonomyForRecommendedModel() {
+        String justification = given()
+                .when().get("/api/routes/" + MB_ROUTE + "/bus-model-recommendation")
+                .then().statusCode(200)
+                .extract().path("recommendations.weekday.models[0].justification");
+
+        org.junit.jupiter.api.Assertions.assertTrue(
+                justification.contains("Cumple capacidad"),
+                "Recommended model justification should state both criteria met, was: " + justification);
+        org.junit.jupiter.api.Assertions.assertTrue(
+                justification.contains("autonomía"),
+                "Recommended model justification should mention autonomy, was: " + justification);
+    }
+
+    @Test
+    void shouldChangeRequiredCapacityWhenTargetOccupancyChanges() {
+        int reqCapDefault = given()
+                .when().get("/api/routes/" + MB_ROUTE + "/bus-model-recommendation")
+                .then().statusCode(200)
+                .extract().path("recommendations.weekday.requiredCapacity");
+
+        int reqCapLow = given()
+                .queryParam("targetOccupancy", "0.5")
+                .when().get("/api/routes/" + MB_ROUTE + "/bus-model-recommendation")
+                .then().statusCode(200)
+                .extract().path("recommendations.weekday.requiredCapacity");
+
+        // Lower occupancy target → more buses needed per trip → higher requiredCapacity
+        org.junit.jupiter.api.Assertions.assertTrue(reqCapLow >= reqCapDefault,
+                "Lower targetOccupancy should yield a higher or equal requiredCapacity");
+    }
+
     // ── AC3 — no model has sufficient capacity ────────────────────────────────
 
     @Test
@@ -152,6 +210,23 @@ class BusModelRecommendationResourceTest {
                 .statusCode(200)
                 .body("recommendations.weekday.models.recommended", not(hasItem(true)))
                 .body("recommendations.weekday.models.meetsCapacity", not(hasItem(true)));
+    }
+
+    @Test
+    void shouldIncludeJustificationMentioningCapacityInsuficienteWhenNoModelEligible() {
+        io.restassured.response.Response response = given()
+                .queryParam("targetOccupancy", "0.0001")
+                .when().get("/api/routes/" + MB_ROUTE + "/bus-model-recommendation")
+                .then().statusCode(200).extract().response();
+
+        java.util.List<String> justifications = response.jsonPath()
+                .getList("recommendations.weekday.models.justification");
+
+        boolean allMentionCapacity = justifications.stream()
+                .allMatch(j -> j.contains("insuficiente"));
+
+        org.junit.jupiter.api.Assertions.assertTrue(allMentionCapacity,
+                "All justifications should mention 'insuficiente' when no model is eligible");
     }
 
     // ── Error cases ───────────────────────────────────────────────────────────

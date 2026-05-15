@@ -24,11 +24,9 @@ steps:
       - -c
       - |
         set -e
-        VERSION="$${TAG_NAME:-$${SHORT_SHA:-dev}}"
-        IMAGE="${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:$$VERSION"
-        gcloud run deploy ${_SERVICE} \
-          --image "$$IMAGE" \
-          --region ${_REGION} \
+        gcloud run deploy equipo2-rutamx-back \
+          --image us-central1-docker.pkg.dev/$PROJECT_ID/rutamx/equipo2-rutamx-back:$SHORT_SHA \
+          --region us-central1 \
           --platform managed \
           --allow-unauthenticated
 

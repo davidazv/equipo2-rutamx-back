@@ -11,6 +11,7 @@ import org.acme.infrastructure.entities.TripEntity;
 import org.acme.infrastructure.mapper.FrequencyMapper;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class FrequencyRepositoryImpl implements FrequencyRepository {
@@ -22,6 +23,16 @@ public class FrequencyRepositoryImpl implements FrequencyRepository {
     @Transactional
     public void deleteAll() {
         entityManager.createQuery("DELETE FROM FrequencyEntity").executeUpdate();
+    }
+
+    @Override
+    public List<Frequency> findAll() {
+        return entityManager
+                .createQuery("SELECT f FROM FrequencyEntity f", FrequencyEntity.class)
+                .getResultList()
+                .stream()
+                .map(FrequencyMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override

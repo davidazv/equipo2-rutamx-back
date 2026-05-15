@@ -15,4 +15,8 @@ public interface AfluenciaMetrobusRepository {
      * Used by HU12 (RecommendBusModelUseCase).
      */
     Map<String, Double> findAvgDemandByLinea(String linea);
+    /** Average of daily totals (SUM per fecha) across all lines. Returns 0 if no data. */
+    double findAvgDailyPassengers();
+    /** Returns (dayOfWeek int [1=Sun..7=Sat], avgPassengers double) pairs ordered by dayOfWeek. */
+    List<Object[]> findAvgByDayOfWeek();
 }

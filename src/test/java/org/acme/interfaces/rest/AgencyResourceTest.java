@@ -71,4 +71,24 @@ class AgencyResourceTest {
                 .statusCode(200)
                 .body("[0].multiColor", notNullValue());
     }
+
+    @Test
+    void getWithColorsShouldReturnRouteCount() {
+        given()
+                .when().get("/api/agencies/with-colors")
+                .then()
+                .statusCode(200)
+                .body("[0].routeCount", notNullValue())
+                .body("routeCount", everyItem(greaterThanOrEqualTo(0)));
+    }
+
+    @Test
+    void getWithColorsShouldReturnCorrectRouteCountForMb() {
+        // Seed data: MB has 1 route (B_CMX0300L1)
+        given()
+                .when().get("/api/agencies/with-colors")
+                .then()
+                .statusCode(200)
+                .body("find { it.agencyId == 'MB' }.routeCount", equalTo(1));
+    }
 }

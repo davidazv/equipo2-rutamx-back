@@ -14,15 +14,20 @@ import org.acme.application.exception.UserNotFoundException;
 import org.acme.application.usecase.ActivateUserUseCase;
 import org.acme.application.usecase.CreateUserUseCase;
 import org.acme.application.usecase.DeleteUserUseCase;
+import org.acme.application.usecase.ExportUsersUseCase;
 import org.acme.application.usecase.SuspendUserUseCase;
 import org.acme.application.usecase.UpdateUserUseCase;
 import org.acme.domain.repository.UserRepository;
+import org.acme.infrastructure.security.AuthContext;
+
+import jakarta.enterprise.context.RequestScoped;
 
 import java.util.logging.Logger;
 
 @Path("/admin/users")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@RequestScoped
 public class UserResource {
 
     private static final Logger log = Logger.getLogger(UserResource.class.getName());
@@ -32,6 +37,8 @@ public class UserResource {
     private final DeleteUserUseCase deleteUserUseCase;
     private final SuspendUserUseCase suspendUserUseCase;
     private final ActivateUserUseCase activateUserUseCase;
+    private final ExportUsersUseCase exportUsersUseCase;
+    private final AuthContext authContext;
 
     // Exception to the no-direct-repo-in-resource rule: read-only list/get-one
     // do not justify a separate use case (per HU01-04 spec).
@@ -43,18 +50,37 @@ public class UserResource {
                         DeleteUserUseCase deleteUserUseCase,
                         SuspendUserUseCase suspendUserUseCase,
                         ActivateUserUseCase activateUserUseCase,
+                        ExportUsersUseCase exportUsersUseCase,
+                        AuthContext authContext,
                         UserRepository userRepository) {
         this.createUserUseCase = createUserUseCase;
         this.updateUserUseCase = updateUserUseCase;
         this.deleteUserUseCase = deleteUserUseCase;
         this.suspendUserUseCase = suspendUserUseCase;
         this.activateUserUseCase = activateUserUseCase;
+        this.exportUsersUseCase = exportUsersUseCase;
+        this.authContext = authContext;
         this.userRepository = userRepository;
     }
 
     @GET
     public Response listUsers() {
         return Response.ok(userRepository.findAll()).build();
+    }
+
+    @GET
+    @Path("/export")
+    @Produces("text/csv")
+    public Response exportUsers() {
+        if (authContext.getUser() == null || !"ADMIN".equals(authContext.getUser().getRoleName())) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("Solo el rol ADMIN puede exportar usuarios").build();
+        }
+        String today = java.time.LocalDate.now().toString();
+        String filename = "usuarios_" + today + ".csv";
+        return Response.ok(exportUsersUseCase.execute())
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .build();
     }
 
     @GET

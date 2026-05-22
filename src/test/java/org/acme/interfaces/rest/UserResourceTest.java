@@ -224,4 +224,48 @@ class UserResourceTest {
                 .statusCode(409)
                 .body(containsString("El usuario ya está suspendido"));
     }
+
+    // ── HU25 – Export CSV ──────────────────────────────────────────────────
+
+    @Test
+    void exportShouldReturn200WithCsvContentType() {
+        given()
+                .when().get("/admin/users/export")
+                .then()
+                .statusCode(200)
+                .contentType("text/csv");
+    }
+
+    @Test
+    void exportShouldReturnCsvWithHeader() {
+        String body = given()
+                .when().get("/admin/users/export")
+                .then()
+                .statusCode(200)
+                .extract().asString();
+
+        assertTrue(body.startsWith("nombre,correo,rol\n"),
+                "CSV debe iniciar con la cabecera nombre,correo,rol");
+    }
+
+    @Test
+    void exportShouldIncludeAtLeastOneSeedUser() {
+        String body = given()
+                .when().get("/admin/users/export")
+                .then()
+                .statusCode(200)
+                .extract().asString();
+
+        assertTrue(body.lines().count() > 1, "CSV debe tener al menos una fila de datos");
+    }
+
+    @Test
+    void exportShouldReturnContentDispositionHeader() {
+        given()
+                .when().get("/admin/users/export")
+                .then()
+                .statusCode(200)
+                .header("Content-Disposition", org.hamcrest.Matchers.containsString("attachment"))
+                .header("Content-Disposition", org.hamcrest.Matchers.containsString("usuarios_"));
+    }
 }

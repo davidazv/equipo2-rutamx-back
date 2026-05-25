@@ -9,6 +9,7 @@ public class AgencyWithColors {
     private String agencyColor;
     private List<String> sampleRouteColors;
     private boolean multiColor;
+    private int routeCount;
 
     public AgencyWithColors() {}
 
@@ -26,4 +27,7 @@ public class AgencyWithColors {
 
     public boolean isMultiColor() { return multiColor; }
     public void setMultiColor(boolean multiColor) { this.multiColor = multiColor; }
+
+    public int getRouteCount() { return routeCount; }
+    public void setRouteCount(int routeCount) { this.routeCount = routeCount; }
 }

@@ -38,7 +38,8 @@ public class AgencyRepositoryImpl implements AgencyRepository {
     @SuppressWarnings("unchecked")
     public List<AgencyWithColors> findAllWithColorInfo() {
         List<Object[]> rows = entityManager.createNativeQuery(
-                "SELECT a.agency_id, a.agency_name, a.agency_color, r.route_color " +
+                "SELECT a.agency_id, a.agency_name, a.agency_color, r.route_color, " +
+                "(SELECT COUNT(*) FROM routes r2 WHERE r2.agency_id = a.agency_id) AS route_count " +
                 "FROM agency a " +
                 "LEFT JOIN routes r ON r.agency_id = a.agency_id AND r.route_color IS NOT NULL AND r.route_color != '' " +
                 "ORDER BY a.agency_name, r.route_color"
@@ -53,6 +54,7 @@ public class AgencyRepositoryImpl implements AgencyRepository {
                 a.setAgencyName((String) row[1]);
                 a.setAgencyColor((String) row[2]);
                 a.setSampleRouteColors(new ArrayList<>());
+                a.setRouteCount(((Number) row[4]).intValue());
                 return a;
             });
             String routeColor = (String) row[3];

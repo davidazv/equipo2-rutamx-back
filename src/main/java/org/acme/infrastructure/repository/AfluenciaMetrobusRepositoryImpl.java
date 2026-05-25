@@ -77,6 +77,32 @@ public class AfluenciaMetrobusRepositoryImpl implements AfluenciaMetrobusReposit
         return result;
     }
 
+    private static final String AVG_DAILY_PASSENGERS_QUERY =
+            "SELECT AVG(daily_total) " +
+            "FROM (SELECT SUM(afluencia) AS daily_total FROM afluencia_metrobus GROUP BY fecha) daily_sums";
+
+    @Override
+    public double findAvgDailyPassengers() {
+        Object result = entityManager
+                .createNativeQuery(AVG_DAILY_PASSENGERS_QUERY)
+                .getSingleResult();
+        return result == null ? 0.0 : ((Number) result).doubleValue();
+    }
+
+    private static final String AVG_BY_DOW_QUERY =
+            "SELECT DAYOFWEEK(fecha) AS dow, AVG(daily_total) AS avg_passengers " +
+            "FROM (SELECT fecha, SUM(afluencia) AS daily_total FROM afluencia_metrobus GROUP BY fecha) daily_sums " +
+            "GROUP BY DAYOFWEEK(fecha) " +
+            "ORDER BY dow";
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<Object[]> findAvgByDayOfWeek() {
+        return entityManager
+                .createNativeQuery(AVG_BY_DOW_QUERY)
+                .getResultList();
+    }
+
     @Override
     @Transactional
     public void deleteAll() {

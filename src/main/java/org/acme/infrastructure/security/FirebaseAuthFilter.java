@@ -38,7 +38,9 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
 
         // Endpoints restricted to authenticated roles (CMO, CEO, COO, ADMIN)
         boolean requiresRoleAuth = path.startsWith("/api/co2-savings")
-                || path.startsWith("/api/routes/trips-by-day");
+                || path.startsWith("/api/routes/trips-by-day")
+                || path.startsWith("/api/reports")
+                || path.startsWith("/api/cmo");
 
         if (requiresRoleAuth) {
             User user = authenticateRequest(requestContext);
@@ -69,7 +71,7 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
                 || path.startsWith("/api/kpi")
                 || path.startsWith("/api/energy-consumption")
                 || path.startsWith("/api/fuel-savings")
-                || path.startsWith("/admin/users")
+                || (path.startsWith("/admin/users") && !path.startsWith("/admin/users/export"))
                 || path.startsWith("/admin/upload")) {
             return;
         }

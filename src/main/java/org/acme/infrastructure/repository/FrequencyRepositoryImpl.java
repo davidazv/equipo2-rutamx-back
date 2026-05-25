@@ -10,7 +10,10 @@ import org.acme.infrastructure.entities.FrequencyEntity;
 import org.acme.infrastructure.entities.TripEntity;
 import org.acme.infrastructure.mapper.FrequencyMapper;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class FrequencyRepositoryImpl implements FrequencyRepository {
@@ -22,6 +25,36 @@ public class FrequencyRepositoryImpl implements FrequencyRepository {
     @Transactional
     public void deleteAll() {
         entityManager.createQuery("DELETE FROM FrequencyEntity").executeUpdate();
+    }
+
+    @Override
+    public List<Frequency> findAll() {
+        return entityManager
+                .createQuery("SELECT f FROM FrequencyEntity f", FrequencyEntity.class)
+                .getResultList()
+                .stream()
+                .map(FrequencyMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Map<String, Integer> findAvgHeadwaySecsByRoute() {
+        List<Object[]> rows = entityManager
+                .createNativeQuery(
+                        "SELECT t.route_id, AVG(f.headway_secs) " +
+                        "FROM frequencies f " +
+                        "JOIN trips t ON f.trip_id = t.trip_id " +
+                        "GROUP BY t.route_id")
+                .getResultList();
+
+        Map<String, Integer> result = new HashMap<>();
+        for (Object[] row : rows) {
+            String routeId = (String) row[0];
+            int avgSecs = ((Number) row[1]).intValue();
+            result.put(routeId, avgSecs);
+        }
+        return result;
     }
 
     @Override

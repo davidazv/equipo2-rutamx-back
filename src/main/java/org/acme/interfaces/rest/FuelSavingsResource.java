@@ -7,12 +7,18 @@ import jakarta.ws.rs.core.Response;
 import org.acme.application.exception.BusModelNotFoundException;
 import org.acme.application.exception.RouteNotFoundException;
 import org.acme.application.usecase.CalculateFuelSavingsUseCase;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.util.logging.Logger;
 
 @Path("/api/fuel-savings")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Tag(name = "Ahorro de Combustible", description = "Proyección del ahorro en combustible al electrificar una ruta")
 public class FuelSavingsResource {
 
     private static final Logger log = Logger.getLogger(FuelSavingsResource.class.getName());
@@ -25,10 +31,23 @@ public class FuelSavingsResource {
     }
 
     @GET
-    public Response getFuelSavings(@QueryParam("routeId") String routeId,
-                                   @QueryParam("modelId") Long modelId,
-                                   @QueryParam("buses") @DefaultValue("10") int buses,
-                                   @QueryParam("years") @DefaultValue("5") int years) {
+    @Operation(summary = "Calcular ahorro en combustible",
+        description = "Proyecta el ahorro económico y en litros de combustible al sustituir buses diésel por el modelo eléctrico especificado. Página: /admin/fleet | /ceo/fleet > pestaña Fleet Analytics. **Roles:** ADMIN, CEO, COO")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Proyección de ahorro calculada"),
+        @APIResponse(responseCode = "400", description = "Parámetros inválidos o faltantes"),
+        @APIResponse(responseCode = "404", description = "Ruta o modelo de bus no encontrado"),
+        @APIResponse(responseCode = "500", description = "Error inesperado")
+    })
+    public Response getFuelSavings(
+            @Parameter(description = "ID de la ruta (GTFS route_id)", required = true, example = "MB-1")
+            @QueryParam("routeId") String routeId,
+            @Parameter(description = "ID del modelo de bus eléctrico", required = true, example = "1")
+            @QueryParam("modelId") Long modelId,
+            @Parameter(description = "Número de buses en la flotilla", example = "10")
+            @QueryParam("buses") @DefaultValue("10") int buses,
+            @Parameter(description = "Período de proyección en años (1–10)", example = "5")
+            @QueryParam("years") @DefaultValue("5") int years) {
         if (routeId == null || routeId.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("El parámetro routeId es requerido").build();

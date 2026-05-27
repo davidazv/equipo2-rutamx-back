@@ -7,12 +7,18 @@ import jakarta.ws.rs.core.Response;
 import org.acme.application.exception.BusModelNotFoundException;
 import org.acme.application.exception.RouteNotFoundException;
 import org.acme.application.usecase.CalculateEnergyConsumptionUseCase;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.util.logging.Logger;
 
 @Path("/api/energy-consumption")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Tag(name = "Energía", description = "Cálculo de consumo energético por ruta y modelo de bus")
 public class EnergyConsumptionResource {
 
     private static final Logger log = Logger.getLogger(EnergyConsumptionResource.class.getName());
@@ -25,9 +31,21 @@ public class EnergyConsumptionResource {
     }
 
     @GET
-    public Response calculateEnergyConsumption(@QueryParam("routeId") String routeId,
-                                               @QueryParam("busModelId") Long busModelId,
-                                               @QueryParam("occupancyPercent") @DefaultValue("50") int occupancyPercent) {
+    @Operation(summary = "Calcular consumo energético",
+        description = "Estima el consumo total de energía (kWh) para una ruta con un modelo de bus y nivel de ocupación dados. Página: /admin/fleet | /ceo/fleet > pestaña Fleet Analytics. **Roles:** ADMIN, CEO, COO")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Consumo energético calculado"),
+        @APIResponse(responseCode = "400", description = "Parámetros inválidos o faltantes"),
+        @APIResponse(responseCode = "404", description = "Ruta o modelo de bus no encontrado"),
+        @APIResponse(responseCode = "500", description = "Error inesperado")
+    })
+    public Response calculateEnergyConsumption(
+            @Parameter(description = "ID de la ruta (GTFS route_id)", required = true, example = "MB-1")
+            @QueryParam("routeId") String routeId,
+            @Parameter(description = "ID del modelo de bus", required = true, example = "1")
+            @QueryParam("busModelId") Long busModelId,
+            @Parameter(description = "Porcentaje de ocupación (0–100)", example = "50")
+            @QueryParam("occupancyPercent") @DefaultValue("50") int occupancyPercent) {
         if (routeId == null || routeId.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("El parámetro routeId es requerido").build();

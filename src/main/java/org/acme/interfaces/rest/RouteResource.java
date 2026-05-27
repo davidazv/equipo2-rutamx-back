@@ -11,12 +11,18 @@ import org.acme.application.usecase.GetRouteTravelTimesUseCase;
 import org.acme.application.usecase.GetTripsByDayUseCase;
 import org.acme.application.usecase.RecommendBusModelUseCase;
 import org.acme.domain.repository.RouteRepository;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.util.logging.Logger;
 
 @Path("/api/routes")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Tag(name = "Rutas", description = "Consulta de rutas GTFS y análisis de tiempos de viaje")
 public class RouteResource {
 
     private static final Logger log = Logger.getLogger(RouteResource.class.getName());
@@ -38,13 +44,21 @@ public class RouteResource {
     }
 
     @GET
+    @Operation(summary = "Listar rutas con distancia",
+        description = "Devuelve todas las rutas con su distancia total calculada. Página: /[rol]/map | /coo/dashboard | /ceo/report | /cmo/dashboard. **Roles:** ADMIN, CEO, COO, CMO")
+    @APIResponse(responseCode = "200", description = "Lista de rutas")
     public Response listRoutes() {
         return Response.ok(routeRepository.findAllWithDistance()).build();
     }
 
     @GET
     @Path("/shapes")
-    public Response listRoutesWithShapes(@QueryParam("agencyId") String agencyId) {
+    @Operation(summary = "Listar rutas con trazado geográfico",
+        description = "Devuelve rutas incluyendo los shapes (polilíneas). Filtrable por agencia. Página: /[rol]/map (mapa interactivo). **Roles:** ADMIN, CEO, COO, CMO")
+    @APIResponse(responseCode = "200", description = "Lista de rutas con shapes")
+    public Response listRoutesWithShapes(
+            @Parameter(description = "ID de la agencia para filtrar (opcional)", example = "MB")
+            @QueryParam("agencyId") String agencyId) {
         if (agencyId != null && !agencyId.isBlank()) {
             return Response.ok(routeRepository.findByAgencyWithShapes(agencyId)).build();
         }
@@ -53,6 +67,12 @@ public class RouteResource {
 
     @GET
     @Path("/travel-times")
+    @Operation(summary = "Tiempos de recorrido por ruta",
+        description = "Calcula el tiempo promedio de viaje para cada ruta. Página: /admin/fleet | /coo/fleet > pestaña Tiempos de Viaje. **Roles:** ADMIN, COO")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Tiempos de recorrido por ruta"),
+        @APIResponse(responseCode = "500", description = "Error al calcular tiempos")
+    })
     public Response listRouteTravelTimes() {
         log.info("GET /api/routes/travel-times");
         try {
@@ -65,6 +85,13 @@ public class RouteResource {
 
     @GET
     @Path("/trips-by-day")
+    @Operation(summary = "Viajes por día de la semana",
+        description = "Devuelve el número de viajes agrupados por día según el calendario GTFS. Página: /admin/dashboard | /ceo/dashboard | /coo/dashboard. **Roles:** ADMIN, CEO, COO")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Viajes agrupados por día"),
+        @APIResponse(responseCode = "404", description = "No hay datos GTFS cargados"),
+        @APIResponse(responseCode = "500", description = "Error inesperado")
+    })
     public Response listTripsByDay() {
         log.info("GET /api/routes/trips-by-day");
         try {
@@ -79,7 +106,15 @@ public class RouteResource {
 
     @GET
     @Path("/{routeId}")
-    public Response getRoute(@PathParam("routeId") String routeId) {
+    @Operation(summary = "Obtener ruta por ID",
+        description = "Página: detalle de ruta en mapa (/[rol]/map). **Roles:** ADMIN, CEO, COO, CMO")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Ruta encontrada"),
+        @APIResponse(responseCode = "404", description = "Ruta no encontrada")
+    })
+    public Response getRoute(
+            @Parameter(description = "ID de la ruta (GTFS route_id)", required = true, example = "MB-1")
+            @PathParam("routeId") String routeId) {
         return routeRepository.findByIdWithDistance(routeId)
                 .map(r -> Response.ok(r).build())
                 .orElse(Response.status(Response.Status.NOT_FOUND)
@@ -88,8 +123,17 @@ public class RouteResource {
 
     @GET
     @Path("/{routeId}/bus-model-recommendation")
+    @Operation(summary = "Recomendación de modelo de bus para una ruta",
+        description = "Calcula el modelo de bus eléctrico más adecuado según distancia y ocupación objetivo. Página: /[rol]/map > pestaña Optimización de Flota. **Roles:** ADMIN, CEO, COO, CMO")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Recomendación generada"),
+        @APIResponse(responseCode = "404", description = "Ruta no encontrada o sin datos de demanda"),
+        @APIResponse(responseCode = "500", description = "Error al generar recomendación")
+    })
     public Response getBusModelRecommendation(
+            @Parameter(description = "ID de la ruta (GTFS route_id)", required = true, example = "MB-1")
             @PathParam("routeId") String routeId,
+            @Parameter(description = "Ocupación objetivo como fracción (0.0–1.0)", example = "0.80")
             @QueryParam("targetOccupancy") @DefaultValue("0.80") double targetOccupancy) {
         log.info("GET /api/routes/" + routeId + "/bus-model-recommendation"
                 + " targetOccupancy=" + targetOccupancy);

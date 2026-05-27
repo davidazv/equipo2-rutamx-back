@@ -76,6 +76,12 @@
       <artifactId>quarkus-jdbc-h2</artifactId>
     </dependency>
 
+    <!-- SmallRye OpenAPI / Swagger UI -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-openapi</artifactId>
+    </dependency>
+
     <!-- CDI -->
     <dependency>
       <groupId>io.quarkus</groupId>

@@ -7,12 +7,18 @@ import jakarta.ws.rs.core.Response;
 import org.acme.application.exception.BusModelNotFoundException;
 import org.acme.application.exception.NoGtfsDataException;
 import org.acme.application.usecase.CalculateCo2SavingsUseCase;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.util.logging.Logger;
 
 @Path("/api/co2-savings")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Tag(name = "Sostenibilidad", description = "Cálculo de ahorro de emisiones CO2 al reemplazar buses diésel")
 public class Co2SavingsResource {
 
     private static final Logger log = Logger.getLogger(Co2SavingsResource.class.getName());
@@ -25,7 +31,17 @@ public class Co2SavingsResource {
     }
 
     @GET
-    public Response getCo2Savings(@QueryParam("busModelId") Long busModelId) {
+    @Operation(summary = "Calcular ahorro de emisiones CO2",
+        description = "Estima el ahorro total de CO2 (toneladas) al sustituir la flotilla diésel por el modelo eléctrico especificado. Página: /admin/map | /cmo/map > pestaña Campañas Ambientales. **Roles:** ADMIN, CMO")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Ahorro de CO2 calculado"),
+        @APIResponse(responseCode = "400", description = "Parámetro busModelId requerido o modelo no válido"),
+        @APIResponse(responseCode = "404", description = "No hay datos GTFS cargados"),
+        @APIResponse(responseCode = "500", description = "Error inesperado")
+    })
+    public Response getCo2Savings(
+            @Parameter(description = "ID del modelo de bus eléctrico", required = true, example = "1")
+            @QueryParam("busModelId") Long busModelId) {
         if (busModelId == null) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("El parámetro busModelId es requerido").build();

@@ -1,20 +1,45 @@
 package org.acme.domain.models;
 
 import java.math.BigDecimal;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
+@Schema(description = "Modelo de autobús (eléctrico o diésel)")
 public class BusModel {
 
+    @Schema(description = "ID único del modelo", example = "1", readOnly = true)
     private Long id;
+
+    @Schema(description = "Nombre comercial del modelo", example = "Yutong E12")
     private String name;
+
+    @Schema(description = "Fabricante", example = "Yutong")
     private String manufacturer;
+
+    @Schema(description = "Tipo de combustible: ELECTRIC o DIESEL")
     private FuelType fuelType;
+
+    @Schema(description = "Autonomía en kilómetros", example = "300.00")
     private BigDecimal autonomyKm;
+
+    @Schema(description = "Capacidad de pasajeros", example = "90")
     private Integer passengerCapacity;
+
+    @Schema(description = "Costo unitario en USD", example = "350000.00")
     private BigDecimal unitCostUsd;
+
+    @Schema(description = "Capacidad de batería en kWh (solo eléctricos)", example = "281.00")
     private BigDecimal batteryCapacityKwh;
+
+    @Schema(description = "Consumo energético en kWh/km (solo eléctricos)", example = "0.94")
     private BigDecimal energyConsumptionKwhKm;
+
+    @Schema(description = "Consumo de combustible en L/km (solo diésel)", example = "0.35")
     private BigDecimal fuelConsumptionLKm;
+
+    @Schema(description = "Costo de mantenimiento por km en USD", example = "0.15")
     private BigDecimal maintenanceCostPerKm;
+
+    @Schema(description = "Emisiones CO2 en g/km (0 para eléctricos)", example = "0.00")
     private BigDecimal co2EmissionsGKm;
 
     public BusModel() {}

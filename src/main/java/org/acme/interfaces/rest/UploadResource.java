@@ -6,6 +6,13 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.application.usecase.*;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
 import jakarta.transaction.Transactional;
@@ -18,6 +25,7 @@ import java.util.logging.Logger;
 
 @Path("/admin/upload")
 @Produces(MediaType.APPLICATION_JSON)
+@Tag(name = "Carga de Datos (CSV)", description = "Importación de archivos CSV con datos GTFS y de afluencia. Página: Admin Panel > pestaña Carga de Datos. **Roles:** ADMIN")
 public class UploadResource {
 
     private static final Logger log = Logger.getLogger(UploadResource.class.getName());
@@ -64,6 +72,15 @@ public class UploadResource {
     @Path("/agency")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Transactional
+    @Operation(summary = "Importar agencias desde CSV (GTFS agency.txt)", description = "Página: Admin Panel > Carga de Datos. **Roles:** ADMIN")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Importación exitosa con resumen de filas procesadas"),
+        @APIResponse(responseCode = "400", description = "Archivo no proporcionado"),
+        @APIResponse(responseCode = "500", description = "Error al procesar el archivo")
+    })
+    @RequestBody(description = "Archivo CSV con datos de agencias",
+        content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(implementation = UploadForm.class)))
     public Response uploadAgency(@MultipartForm UploadForm form) {
         return executeUpload("agency", form, importAgencyUseCase::execute);
     }
@@ -72,6 +89,15 @@ public class UploadResource {
     @Path("/bus-models")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Transactional
+    @Operation(summary = "Importar modelos de bus desde CSV", description = "Página: Admin Panel > Carga de Datos. **Roles:** ADMIN")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Importación exitosa"),
+        @APIResponse(responseCode = "400", description = "Archivo no proporcionado"),
+        @APIResponse(responseCode = "500", description = "Error al procesar el archivo")
+    })
+    @RequestBody(description = "Archivo CSV con datos de modelos de bus",
+        content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(implementation = UploadForm.class)))
     public Response uploadBusModels(@MultipartForm UploadForm form) {
         return executeUpload("bus-models", form, importBusModelUseCase::execute);
     }
@@ -80,6 +106,15 @@ public class UploadResource {
     @Path("/calendar")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Transactional
+    @Operation(summary = "Importar calendario desde CSV (GTFS calendar.txt)", description = "Página: Admin Panel > Carga de Datos. **Roles:** ADMIN")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Importación exitosa"),
+        @APIResponse(responseCode = "400", description = "Archivo no proporcionado"),
+        @APIResponse(responseCode = "500", description = "Error al procesar el archivo")
+    })
+    @RequestBody(description = "Archivo CSV con datos de calendario GTFS",
+        content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(implementation = UploadForm.class)))
     public Response uploadCalendar(@MultipartForm UploadForm form) {
         return executeUpload("calendar", form, importCalendarUseCase::execute);
     }
@@ -88,6 +123,15 @@ public class UploadResource {
     @Path("/routes")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Transactional
+    @Operation(summary = "Importar rutas desde CSV (GTFS routes.txt)", description = "Página: Admin Panel > Carga de Datos. **Roles:** ADMIN")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Importación exitosa"),
+        @APIResponse(responseCode = "400", description = "Archivo no proporcionado"),
+        @APIResponse(responseCode = "500", description = "Error al procesar el archivo")
+    })
+    @RequestBody(description = "Archivo CSV con datos de rutas GTFS",
+        content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(implementation = UploadForm.class)))
     public Response uploadRoutes(@MultipartForm UploadForm form) {
         return executeUpload("routes", form, importRouteUseCase::execute);
     }
@@ -96,6 +140,15 @@ public class UploadResource {
     @Path("/stops")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Transactional
+    @Operation(summary = "Importar paradas desde CSV (GTFS stops.txt)", description = "Página: Admin Panel > Carga de Datos. **Roles:** ADMIN")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Importación exitosa"),
+        @APIResponse(responseCode = "400", description = "Archivo no proporcionado"),
+        @APIResponse(responseCode = "500", description = "Error al procesar el archivo")
+    })
+    @RequestBody(description = "Archivo CSV con datos de paradas GTFS",
+        content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(implementation = UploadForm.class)))
     public Response uploadStops(@MultipartForm UploadForm form) {
         return executeUpload("stops", form, importStopUseCase::execute);
     }
@@ -104,6 +157,15 @@ public class UploadResource {
     @Path("/trips")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Transactional
+    @Operation(summary = "Importar viajes desde CSV (GTFS trips.txt)", description = "Página: Admin Panel > Carga de Datos. **Roles:** ADMIN")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Importación exitosa"),
+        @APIResponse(responseCode = "400", description = "Archivo no proporcionado"),
+        @APIResponse(responseCode = "500", description = "Error al procesar el archivo")
+    })
+    @RequestBody(description = "Archivo CSV con datos de viajes GTFS",
+        content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(implementation = UploadForm.class)))
     public Response uploadTrips(@MultipartForm UploadForm form) {
         return executeUpload("trips", form, importTripUseCase::execute);
     }
@@ -112,6 +174,15 @@ public class UploadResource {
     @Path("/stop-times")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Transactional
+    @Operation(summary = "Importar horarios de paradas desde CSV (GTFS stop_times.txt)", description = "Página: Admin Panel > Carga de Datos. **Roles:** ADMIN")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Importación exitosa"),
+        @APIResponse(responseCode = "400", description = "Archivo no proporcionado"),
+        @APIResponse(responseCode = "500", description = "Error al procesar el archivo")
+    })
+    @RequestBody(description = "Archivo CSV con stop_times GTFS",
+        content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(implementation = UploadForm.class)))
     public Response uploadStopTimes(@MultipartForm UploadForm form) {
         return executeUpload("stop-times", form, importStopTimeUseCase::execute);
     }
@@ -120,6 +191,15 @@ public class UploadResource {
     @Path("/shapes")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Transactional
+    @Operation(summary = "Importar trazados geográficos desde CSV (GTFS shapes.txt)", description = "Página: Admin Panel > Carga de Datos. **Roles:** ADMIN")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Importación exitosa"),
+        @APIResponse(responseCode = "400", description = "Archivo no proporcionado"),
+        @APIResponse(responseCode = "500", description = "Error al procesar el archivo")
+    })
+    @RequestBody(description = "Archivo CSV con shapes GTFS",
+        content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(implementation = UploadForm.class)))
     public Response uploadShapes(@MultipartForm UploadForm form) {
         return executeUpload("shapes", form, importShapeUseCase::execute);
     }
@@ -128,6 +208,15 @@ public class UploadResource {
     @Path("/frequencies")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Transactional
+    @Operation(summary = "Importar frecuencias desde CSV (GTFS frequencies.txt)", description = "Página: Admin Panel > Carga de Datos. **Roles:** ADMIN")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Importación exitosa"),
+        @APIResponse(responseCode = "400", description = "Archivo no proporcionado"),
+        @APIResponse(responseCode = "500", description = "Error al procesar el archivo")
+    })
+    @RequestBody(description = "Archivo CSV con frecuencias GTFS",
+        content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(implementation = UploadForm.class)))
     public Response uploadFrequencies(@MultipartForm UploadForm form) {
         return executeUpload("frequencies", form, importFrequencyUseCase::execute);
     }
@@ -136,12 +225,24 @@ public class UploadResource {
     @Path("/afluencia")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Transactional
+    @Operation(summary = "Importar datos de afluencia de pasajeros desde CSV", description = "Página: Admin Panel > Carga de Datos. **Roles:** ADMIN")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Importación exitosa"),
+        @APIResponse(responseCode = "400", description = "Archivo no proporcionado"),
+        @APIResponse(responseCode = "500", description = "Error al procesar el archivo")
+    })
+    @RequestBody(description = "Archivo CSV con datos de afluencia Metrobús",
+        content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(implementation = UploadForm.class)))
     public Response uploadAfluencia(@MultipartForm UploadForm form) {
         return executeUpload("afluencia", form, importAfluenciaUseCase::execute);
     }
 
     @GET
     @Path("/status")
+    @Operation(summary = "Estado de carga de tablas",
+        description = "Devuelve el conteo de filas y la fecha de última importación de cada tabla. Página: Admin Panel > Carga de Datos. **Roles:** ADMIN")
+    @APIResponse(responseCode = "200", description = "Estado actual de cada tabla de datos")
     public Response getTableStatus() {
         String[] keys = {"agency", "calendar", "stops", "bus-models", "shapes",
                 "afluencia", "routes", "trips", "stop-times", "frequencies"};

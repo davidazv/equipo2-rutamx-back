@@ -10,6 +10,10 @@ import org.acme.domain.repository.StopTimeRepository;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class ImportStopUseCase {
@@ -39,21 +43,32 @@ public class ImportStopUseCase {
         stopTimeRepository.deleteAll();
         stopRepository.deleteAll();
 
-        int imported = stopRepository.createAll(result.getItems());
+        List<Stop> deduped = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (Stop s : result.getItems()) {
+            if (seen.add(s.getStopId())) deduped.add(s);
+        }
+        int imported = stopRepository.createAll(deduped);
         return new CsvImportResult("stops", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());
     }
 
     private Stop mapRow(String[] row) {
+        BigDecimal lat = new BigDecimal(row[2].trim());
+        BigDecimal lon = new BigDecimal(row[3].trim());
+        if (lat.compareTo(BigDecimal.valueOf(-90)) < 0 || lat.compareTo(BigDecimal.valueOf(90)) > 0
+                || lon.compareTo(BigDecimal.valueOf(-180)) < 0 || lon.compareTo(BigDecimal.valueOf(180)) > 0) {
+            return null;
+        }
         Stop stop = new Stop();
         stop.setStopId(row[0].trim());
         stop.setStopName(row[1].trim());
-        stop.setStopLat(new BigDecimal(row[2].trim()));
-        stop.setStopLon(new BigDecimal(row[3].trim()));
+        stop.setStopLat(lat);
+        stop.setStopLon(lon);
         stop.setZoneId(row[4].trim());
         stop.setWheelchairBoarding(
                 row.length > 5 && !row[5].trim().isEmpty()
-                        ? Byte.parseByte(row[5].trim())
+                        ? (byte) Double.parseDouble(row[5].trim())
                         : null
         );
         return stop;

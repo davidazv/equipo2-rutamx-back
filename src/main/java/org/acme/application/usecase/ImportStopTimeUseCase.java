@@ -8,6 +8,10 @@ import org.acme.domain.models.StopTime;
 import org.acme.domain.repository.StopTimeRepository;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class ImportStopTimeUseCase {
@@ -33,7 +37,12 @@ public class ImportStopTimeUseCase {
 
         stopTimeRepository.deleteAll();
 
-        int imported = stopTimeRepository.createAll(result.getItems());
+        List<StopTime> deduped = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (StopTime st : result.getItems()) {
+            if (seen.add(st.getTripId() + "|" + st.getStopSequence())) deduped.add(st);
+        }
+        int imported = stopTimeRepository.createAll(deduped);
         return new CsvImportResult("stop_times", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());
     }
@@ -43,11 +52,13 @@ public class ImportStopTimeUseCase {
         stopTime.setTripId(row[0].trim());
         stopTime.setTimepoint(
                 !row[1].trim().isEmpty()
-                        ? Byte.parseByte(row[1].trim())
+                        ? (byte) Double.parseDouble(row[1].trim())
                         : null
         );
         stopTime.setStopId(row[2].trim());
-        stopTime.setStopSequence(Integer.parseInt(row[3].trim()));
+        int seq = Integer.parseInt(row[3].trim());
+        if (seq <= 0) return null;
+        stopTime.setStopSequence(seq);
         stopTime.setArrivalTime(row[4].trim());
         stopTime.setDepartureTime(row[5].trim());
         return stopTime;

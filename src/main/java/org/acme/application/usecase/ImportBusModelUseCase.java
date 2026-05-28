@@ -10,6 +10,10 @@ import org.acme.domain.repository.BusModelRepository;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class ImportBusModelUseCase {
@@ -37,7 +41,12 @@ public class ImportBusModelUseCase {
 
         busModelRepository.deleteAll();
 
-        int imported = busModelRepository.createAll(result.getItems());
+        List<BusModel> deduped = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (BusModel m : result.getItems()) {
+            if (seen.add(m.getName())) deduped.add(m);
+        }
+        int imported = busModelRepository.createAll(deduped);
         return new CsvImportResult("bus_model", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());
     }
@@ -50,11 +59,15 @@ public class ImportBusModelUseCase {
         model.setAutonomyKm(new BigDecimal(row[3].trim()));
         model.setPassengerCapacity(Integer.parseInt(row[4].trim()));
         model.setUnitCostUsd(new BigDecimal(row[5].trim()));
-        model.setBatteryCapacityKwh(new BigDecimal(row[6].trim()));
-        model.setEnergyConsumptionKwhKm(new BigDecimal(row[7].trim()));
-        model.setFuelConsumptionLKm(new BigDecimal(row[8].trim()));
+        model.setBatteryCapacityKwh(parseOrZero(row[6].trim()));
+        model.setEnergyConsumptionKwhKm(parseOrZero(row[7].trim()));
+        model.setFuelConsumptionLKm(parseOrZero(row[8].trim()));
         model.setMaintenanceCostPerKm(new BigDecimal(row[9].trim()));
         model.setCo2EmissionsGKm(new BigDecimal(row[10].trim()));
         return model;
+    }
+
+    private static BigDecimal parseOrZero(String val) {
+        return val.isEmpty() ? BigDecimal.ZERO : new BigDecimal(val);
     }
 }

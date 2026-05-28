@@ -106,7 +106,7 @@ class ImportShapeUseCaseTest {
         ArgumentCaptor<List<Shape>> captor = ArgumentCaptor.forClass(List.class);
         verify(shapeRepository).createAll(captor.capture());
         Shape shape = captor.getValue().get(0);
-        assertNull(shape.getShapeDistTraveled());
+        assertEquals(BigDecimal.ZERO, shape.getShapeDistTraveled());
         assertEquals("SH1", shape.getShapeId());
     }
 

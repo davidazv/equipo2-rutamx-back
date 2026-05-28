@@ -10,6 +10,10 @@ import org.acme.domain.repository.StopTimeRepository;
 import org.acme.domain.repository.TripRepository;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class ImportTripUseCase {
@@ -43,7 +47,12 @@ public class ImportTripUseCase {
         stopTimeRepository.deleteAll();
         tripRepository.deleteAll();
 
-        int imported = tripRepository.createAll(result.getItems());
+        List<Trip> deduped = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (Trip t : result.getItems()) {
+            if (seen.add(t.getTripId())) deduped.add(t);
+        }
+        int imported = tripRepository.createAll(deduped);
         return new CsvImportResult("trips", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());
     }
@@ -65,8 +74,8 @@ public class ImportTripUseCase {
 
         trip.setDirectionId(
                 row.length > 6 && !row[6].trim().isEmpty()
-                        ? Byte.parseByte(row[6].trim())
-                        : null
+                        ? (byte) Double.parseDouble(row[6].trim())
+                        : (byte) 0
         );
         return trip;
     }

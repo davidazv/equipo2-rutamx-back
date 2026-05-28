@@ -105,7 +105,7 @@ class ImportFrequencyUseCaseTest {
         ArgumentCaptor<List<Frequency>> captor = ArgumentCaptor.forClass(List.class);
         verify(frequencyRepository).createAll(captor.capture());
         Frequency freq = captor.getValue().get(0);
-        assertNull(freq.getExactTimes());
+        assertEquals((byte) 0, (byte) freq.getExactTimes());
         assertEquals(600, freq.getHeadwaySecs());
     }
 

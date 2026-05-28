@@ -9,7 +9,13 @@ import org.acme.domain.repository.AfluenciaMetrobusRepository;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.text.Normalizer;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class ImportAfluenciaUseCase {
@@ -36,19 +42,40 @@ public class ImportAfluenciaUseCase {
 
         afluenciaMetrobusRepository.deleteAll();
 
-        int imported = afluenciaMetrobusRepository.createAll(result.getItems());
+        List<AfluenciaMetrobus> deduped = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (AfluenciaMetrobus a : result.getItems()) {
+            String key = a.getFecha() + "|" + a.getLinea() + "|" + a.getTipoPago();
+            if (seen.add(key)) deduped.add(a);
+        }
+        int imported = afluenciaMetrobusRepository.createAll(deduped);
         return new CsvImportResult("afluencia_metrobus", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());
     }
 
     private AfluenciaMetrobus mapRow(String[] row) {
+        for (String cell : row) {
+            if (cell.trim().isEmpty()) return null;
+        }
+        LocalDate fecha;
+        try {
+            fecha = LocalDate.parse(row[0].trim());
+        } catch (DateTimeParseException e) {
+            return null;
+        }
+        BigDecimal afluenciaVal = new BigDecimal(row[5].trim());
+        if (afluenciaVal.compareTo(BigDecimal.ZERO) <= 0) return null;
+
+        String linea = row[3].trim().toLowerCase();
+        linea = Normalizer.normalize(linea, Normalizer.Form.NFKD).replaceAll("[^\\p{ASCII}]", "");
+
         AfluenciaMetrobus afluencia = new AfluenciaMetrobus();
-        afluencia.setFecha(LocalDate.parse(row[0].trim()));
+        afluencia.setFecha(fecha);
         afluencia.setMes(row[1].trim());
         afluencia.setAnio(Short.parseShort(row[2].trim()));
-        afluencia.setLinea(row[3].trim());
+        afluencia.setLinea(linea);
         afluencia.setTipoPago(row[4].trim());
-        afluencia.setAfluencia(new BigDecimal(row[5].trim()));
+        afluencia.setAfluencia(afluenciaVal);
         return afluencia;
     }
 }

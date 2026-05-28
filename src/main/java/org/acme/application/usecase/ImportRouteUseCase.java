@@ -55,7 +55,11 @@ public class ImportRouteUseCase {
 
         CsvParser.ParseResult<Route> result = csvParser.parse(csvFile, headers, this::mapRow);
 
-        List<Route> routes = result.getItems();
+        List<Route> routes = new ArrayList<>();
+        Set<String> seenRoutes = new HashSet<>();
+        for (Route r : result.getItems()) {
+            if (seenRoutes.add(r.getRouteId())) routes.add(r);
+        }
         assignMissingColors(routes);
         createMissingAgencies(routes);
 

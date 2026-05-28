@@ -119,7 +119,7 @@ class ImportTripUseCaseTest {
         assertNull(trip.getShapeId());
         assertNull(trip.getTripHeadsign());
         assertNull(trip.getTripShortName());
-        assertNull(trip.getDirectionId());
+        assertEquals((byte) 0, (byte) trip.getDirectionId());
     }
 
     private Trip buildTrip(String id) {

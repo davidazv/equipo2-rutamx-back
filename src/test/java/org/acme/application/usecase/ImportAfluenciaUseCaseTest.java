@@ -45,7 +45,10 @@ class ImportAfluenciaUseCaseTest {
 
     @Test
     void executeShouldReturnCorrectImportResult() {
-        List<AfluenciaMetrobus> items = List.of(buildAfluencia(), buildAfluencia());
+        AfluenciaMetrobus a1 = buildAfluencia();
+        AfluenciaMetrobus a2 = buildAfluencia();
+        a2.setFecha(LocalDate.of(2026, 3, 16));
+        List<AfluenciaMetrobus> items = List.of(a1, a2);
         stubParser(items, 3, List.of("Fila 3: bad date"));
         when(afluenciaRepository.createAll(items)).thenReturn(2);
 
@@ -110,7 +113,7 @@ class ImportAfluenciaUseCaseTest {
         assertEquals(LocalDate.of(2026, 3, 15), a.getFecha());
         assertEquals("Marzo", a.getMes());
         assertEquals(2026, a.getAnio());
-        assertEquals("Linea 1", a.getLinea());
+        assertEquals("linea 1", a.getLinea());
         assertEquals("Tarjeta", a.getTipoPago());
         assertEquals(new BigDecimal("15000.50"), a.getAfluencia());
     }

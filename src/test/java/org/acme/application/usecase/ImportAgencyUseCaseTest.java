@@ -95,7 +95,7 @@ class ImportAgencyUseCaseTest {
         verify(csvParser).parse(any(InputStream.class), headersCaptor.capture(), any());
         String[] headers = headersCaptor.getValue();
         assertArrayEquals(new String[]{"agency_id", "agency_name", "agency_url",
-                "agency_timezone", "agency_lang", "agency_color"}, headers);
+                "agency_timezone", "agency_lang"}, headers);
     }
 
     @Test

@@ -12,6 +12,10 @@ import org.acme.domain.repository.StopTimeRepository;
 import org.acme.domain.repository.TripRepository;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class ImportAgencyUseCase {
@@ -43,7 +47,7 @@ public class ImportAgencyUseCase {
     @Transactional
     public CsvImportResult execute(InputStream csvFile) {
         String[] headers = {"agency_id", "agency_name", "agency_url",
-                "agency_timezone", "agency_lang", "agency_color"};
+                "agency_timezone", "agency_lang"};
 
         CsvParser.ParseResult<Agency> result = csvParser.parse(csvFile, headers, this::mapRow);
 
@@ -53,7 +57,12 @@ public class ImportAgencyUseCase {
         routeRepository.deleteAll();
         agencyRepository.deleteAll();
 
-        int imported = agencyRepository.createAll(result.getItems());
+        List<Agency> deduped = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (Agency a : result.getItems()) {
+            if (seen.add(a.getAgencyId())) deduped.add(a);
+        }
+        int imported = agencyRepository.createAll(deduped);
         return new CsvImportResult("agency", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());
     }

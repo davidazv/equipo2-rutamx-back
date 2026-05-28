@@ -12,6 +12,10 @@ import org.acme.domain.repository.TripRepository;
 
 import java.io.InputStream;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
@@ -54,7 +58,12 @@ public class ImportCalendarUseCase {
         tripRepository.deleteAll();
         calendarRepository.deleteAll();
 
-        int imported = calendarRepository.createAll(result.getItems());
+        List<Calendar> deduped = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (Calendar c : result.getItems()) {
+            if (seen.add(c.getServiceId())) deduped.add(c);
+        }
+        int imported = calendarRepository.createAll(deduped);
         return new CsvImportResult("calendar", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());
     }
@@ -62,13 +71,13 @@ public class ImportCalendarUseCase {
     private Calendar mapRow(String[] row) {
         Calendar calendar = new Calendar();
         calendar.setServiceId(row[0].trim());
-        calendar.setMonday(Byte.parseByte(row[1].trim()));
-        calendar.setTuesday(Byte.parseByte(row[2].trim()));
-        calendar.setWednesday(Byte.parseByte(row[3].trim()));
-        calendar.setThursday(Byte.parseByte(row[4].trim()));
-        calendar.setFriday(Byte.parseByte(row[5].trim()));
-        calendar.setSaturday(Byte.parseByte(row[6].trim()));
-        calendar.setSunday(Byte.parseByte(row[7].trim()));
+        calendar.setMonday((byte) Double.parseDouble(row[1].trim()));
+        calendar.setTuesday((byte) Double.parseDouble(row[2].trim()));
+        calendar.setWednesday((byte) Double.parseDouble(row[3].trim()));
+        calendar.setThursday((byte) Double.parseDouble(row[4].trim()));
+        calendar.setFriday((byte) Double.parseDouble(row[5].trim()));
+        calendar.setSaturday((byte) Double.parseDouble(row[6].trim()));
+        calendar.setSunday((byte) Double.parseDouble(row[7].trim()));
         calendar.setStartDate(parseDate(row[8].trim()));
         calendar.setEndDate(parseDate(row[9].trim()));
         return calendar;

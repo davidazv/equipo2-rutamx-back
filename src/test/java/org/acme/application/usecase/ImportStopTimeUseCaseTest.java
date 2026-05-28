@@ -43,7 +43,10 @@ class ImportStopTimeUseCaseTest {
 
     @Test
     void executeShouldReturnCorrectImportResult() {
-        List<StopTime> items = List.of(buildStopTime("T1", "S1"), buildStopTime("T1", "S2"));
+        StopTime st1 = buildStopTime("T1", "S1");
+        StopTime st2 = buildStopTime("T1", "S2");
+        st2.setStopSequence(2);
+        List<StopTime> items = List.of(st1, st2);
         stubParser(items, 3, List.of("Fila 3: bad seq"));
         when(stopTimeRepository.createAll(items)).thenReturn(2);
 

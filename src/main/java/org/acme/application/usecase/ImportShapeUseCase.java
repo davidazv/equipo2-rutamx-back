@@ -9,6 +9,10 @@ import org.acme.domain.repository.ShapeRepository;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class ImportShapeUseCase {
@@ -34,7 +38,12 @@ public class ImportShapeUseCase {
 
         shapeRepository.deleteAll();
 
-        int imported = shapeRepository.createAll(result.getItems());
+        List<Shape> deduped = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (Shape s : result.getItems()) {
+            if (seen.add(s.getShapeId() + "|" + s.getShapePtSequence())) deduped.add(s);
+        }
+        int imported = shapeRepository.createAll(deduped);
         return new CsvImportResult("shapes", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());
     }
@@ -45,11 +54,8 @@ public class ImportShapeUseCase {
         shape.setShapePtLat(new BigDecimal(row[1].trim()));
         shape.setShapePtLon(new BigDecimal(row[2].trim()));
         shape.setShapePtSequence(Integer.parseInt(row[3].trim()));
-        shape.setShapeDistTraveled(
-                !row[4].trim().isEmpty()
-                        ? new BigDecimal(row[4].trim())
-                        : null
-        );
+        String dist = row[4].trim();
+        shape.setShapeDistTraveled(dist.isEmpty() ? BigDecimal.ZERO : new BigDecimal(dist));
         return shape;
     }
 }

@@ -2,6 +2,7 @@ package org.acme.interfaces.rest;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -112,7 +113,7 @@ public class UserResource {
     })
     public Response getUser(
             @Parameter(description = "ID del usuario", required = true, example = "1")
-            @PathParam("id") Long id) {
+            @PathParam("id") @Positive Long id) {
         return userRepository.findById(id)
                 .map(u -> Response.ok(u).build())
                 .orElse(Response.status(Response.Status.NOT_FOUND)
@@ -158,8 +159,8 @@ public class UserResource {
         content = @Content(schema = @Schema(implementation = UpdateUserDto.class)))
     public Response updateUser(
             @Parameter(description = "ID del usuario", required = true, example = "1")
-            @PathParam("id") Long id,
-            UpdateUserDto dto) {
+            @PathParam("id") @Positive Long id,
+            @Valid UpdateUserDto dto) {
         try {
             return Response.ok(updateUserUseCase.execute(id, dto)).build();
         } catch (UserNotFoundException e) {
@@ -184,7 +185,7 @@ public class UserResource {
     })
     public Response deleteUser(
             @Parameter(description = "ID del usuario", required = true, example = "1")
-            @PathParam("id") Long id) {
+            @PathParam("id") @Positive Long id) {
         try {
             deleteUserUseCase.execute(id);
             return Response.noContent().build();
@@ -214,7 +215,7 @@ public class UserResource {
     })
     public Response activateUser(
             @Parameter(description = "ID del usuario", required = true, example = "1")
-            @PathParam("id") Long id) {
+            @PathParam("id") @Positive Long id) {
         try {
             return Response.ok(activateUserUseCase.execute(id)).build();
         } catch (UserNotFoundException e) {
@@ -244,7 +245,7 @@ public class UserResource {
     })
     public Response suspendUser(
             @Parameter(description = "ID del usuario", required = true, example = "1")
-            @PathParam("id") Long id) {
+            @PathParam("id") @Positive Long id) {
         try {
             return Response.ok(suspendUserUseCase.execute(id)).build();
         } catch (UserNotFoundException e) {

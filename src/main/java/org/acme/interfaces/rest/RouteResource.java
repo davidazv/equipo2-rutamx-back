@@ -1,6 +1,10 @@
 package org.acme.interfaces.rest;
 
 import jakarta.inject.Inject;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -58,7 +62,8 @@ public class RouteResource {
     @APIResponse(responseCode = "200", description = "Lista de rutas con shapes")
     public Response listRoutesWithShapes(
             @Parameter(description = "ID de la agencia para filtrar (opcional)", example = "MB")
-            @QueryParam("agencyId") String agencyId) {
+            @QueryParam("agencyId") @Size(max = 50)
+            @Pattern(regexp = "^[A-Za-z0-9_-]{0,50}$", message = "agencyId inválido") String agencyId) {
         if (agencyId != null && !agencyId.isBlank()) {
             return Response.ok(routeRepository.findByAgencyWithShapes(agencyId)).build();
         }
@@ -114,7 +119,8 @@ public class RouteResource {
     })
     public Response getRoute(
             @Parameter(description = "ID de la ruta (GTFS route_id)", required = true, example = "MB-1")
-            @PathParam("routeId") String routeId) {
+            @PathParam("routeId") @Size(max = 50)
+            @Pattern(regexp = "^[A-Za-z0-9_-]{1,50}$", message = "routeId inválido") String routeId) {
         return routeRepository.findByIdWithDistance(routeId)
                 .map(r -> Response.ok(r).build())
                 .orElse(Response.status(Response.Status.NOT_FOUND)
@@ -132,9 +138,11 @@ public class RouteResource {
     })
     public Response getBusModelRecommendation(
             @Parameter(description = "ID de la ruta (GTFS route_id)", required = true, example = "MB-1")
-            @PathParam("routeId") String routeId,
+            @PathParam("routeId") @Size(max = 50)
+            @Pattern(regexp = "^[A-Za-z0-9_-]{1,50}$", message = "routeId inválido") String routeId,
             @Parameter(description = "Ocupación objetivo como fracción (0.0–1.0)", example = "0.80")
-            @QueryParam("targetOccupancy") @DefaultValue("0.80") double targetOccupancy) {
+            @QueryParam("targetOccupancy") @DefaultValue("0.80")
+            @DecimalMin("0.0") @DecimalMax("1.0") double targetOccupancy) {
         log.info("GET /api/routes/" + routeId + "/bus-model-recommendation"
                 + " targetOccupancy=" + targetOccupancy);
         try {

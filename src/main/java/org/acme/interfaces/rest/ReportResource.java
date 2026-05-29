@@ -1,6 +1,11 @@
 package org.acme.interfaces.rest;
 
 import jakarta.inject.Inject;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -47,15 +52,16 @@ public class ReportResource {
     })
     public Response generateComparativeReport(
             @Parameter(description = "ID de la ruta (GTFS route_id)", required = true, example = "MB-1")
-            @QueryParam("routeId") String routeId,
+            @QueryParam("routeId") @Size(max = 50)
+            @Pattern(regexp = "^[A-Za-z0-9_-]{1,50}$", message = "routeId inválido") String routeId,
             @Parameter(description = "ID del modelo de bus eléctrico", required = true, example = "1")
-            @QueryParam("electricModelId") Long electricModelId,
+            @QueryParam("electricModelId") @Positive Long electricModelId,
             @Parameter(description = "ID del modelo de bus diésel", required = true, example = "2")
-            @QueryParam("dieselModelId") Long dieselModelId,
+            @QueryParam("dieselModelId") @Positive Long dieselModelId,
             @Parameter(description = "Número de buses en la flotilla", example = "10")
-            @QueryParam("buses") @DefaultValue("10") int buses,
+            @QueryParam("buses") @DefaultValue("10") @Min(1) @Max(10000) int buses,
             @Parameter(description = "Años de proyección financiera (1–30)", example = "10")
-            @QueryParam("years") @DefaultValue("10") int years) {
+            @QueryParam("years") @DefaultValue("10") @Min(1) @Max(30) int years) {
 
         if (authContext.getUser() == null || !"CMO".equals(authContext.getUser().getRoleName())) {
             return Response.status(Response.Status.FORBIDDEN)

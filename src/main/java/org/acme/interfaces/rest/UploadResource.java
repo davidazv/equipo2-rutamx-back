@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 @Path("/admin/upload")
@@ -29,6 +30,17 @@ import java.util.logging.Logger;
 public class UploadResource {
 
     private static final Logger log = Logger.getLogger(UploadResource.class.getName());
+
+    // Whitelist of physical table names countTable() may query. Prevents SQL
+    // injection via dynamic table name interpolation in native queries.
+    private static final Set<String> ALLOWED_COUNT_TABLES = Set.of(
+            "agency", "calendar", "stops", "bus_models", "shapes",
+            "afluencia_metrobus", "routes", "trips", "stop_times", "frequencies");
+
+    // Whitelist of logical keys executeUpload() may record in upload_metadata.
+    private static final Set<String> ALLOWED_UPLOAD_KEYS = Set.of(
+            "agency", "calendar", "stops", "bus-models", "shapes",
+            "afluencia", "routes", "trips", "stop-times", "frequencies");
 
     @Inject
     EntityManager entityManager;
@@ -274,6 +286,9 @@ public class UploadResource {
     }
 
     private long countTable(String tableName) {
+        if (!ALLOWED_COUNT_TABLES.contains(tableName)) {
+            return 0;
+        }
         try {
             return ((Number) entityManager
                     .createNativeQuery("SELECT COUNT(*) FROM " + tableName)
@@ -284,7 +299,10 @@ public class UploadResource {
     }
 
     private Response executeUpload(String tableName, UploadForm form, ImportUseCase useCase) {
-        if (form.file == null) {
+        if (!ALLOWED_UPLOAD_KEYS.contains(tableName)) {
+            return Response.status(400).entity("Tabla no permitida").build();
+        }
+        if (form == null || form.file == null) {
             return Response.status(400).entity("Archivo requerido").build();
         }
         try {
@@ -298,7 +316,7 @@ public class UploadResource {
             return Response.ok(result).build();
         } catch (Exception e) {
             log.severe("Error uploading " + tableName + ": " + e.getMessage());
-            return Response.serverError().entity("Error al importar " + tableName + ": " + e.getMessage()).build();
+            return Response.serverError().entity("Error al importar " + tableName).build();
         }
     }
 

@@ -1,0 +1,44 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: rutamx-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: rutamx
+    command:
+      - --local-infile=1
+      - --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - rutamx-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rutamx-back:local
+    container_name: rutamx-back
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_KIND: mysql
+      DB_USERNAME: root
+      DB_PASSWORD: rootpass
+      DB_JDBC_URL: jdbc:mysql://mysql:3306/rutamx
+      DB_SCHEMA_STRATEGY: update
+      FIREBASE_CREDENTIALS: /app/firebase-credentials.json
+    volumes:
+      - ./src/main/resources/rutamx-firebase-adminsdk.json:/app/firebase-credentials.json:ro
+    ports:
+      - "8080:8080"
+
+volumes:
+  rutamx-mysql-data:

@@ -59,9 +59,13 @@ public class ReportResource {
             @Parameter(description = "ID del modelo de bus diésel", required = true, example = "2")
             @QueryParam("dieselModelId") @Positive Long dieselModelId,
             @Parameter(description = "Número de buses en la flotilla", example = "10")
-            @QueryParam("buses") @DefaultValue("10") @Min(1) @Max(10000) int buses,
+            @QueryParam("buses") @DefaultValue("10")
+            @Min(value = 1, message = "El número de buses debe ser al menos 1")
+            @Max(value = 10000, message = "El número de buses no puede superar 10000") int buses,
             @Parameter(description = "Años de proyección financiera (1–30)", example = "10")
-            @QueryParam("years") @DefaultValue("10") @Min(1) @Max(30) int years) {
+            @QueryParam("years") @DefaultValue("10")
+            @Min(value = 1, message = "Los años de proyección deben estar entre 1 y 30")
+            @Max(value = 30, message = "Los años de proyección deben estar entre 1 y 30") int years) {
 
         if (authContext.getUser() == null || !"CMO".equals(authContext.getUser().getRoleName())) {
             return Response.status(Response.Status.FORBIDDEN)

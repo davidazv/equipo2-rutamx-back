@@ -63,7 +63,7 @@ public class RouteResource {
     public Response listRoutesWithShapes(
             @Parameter(description = "ID de la agencia para filtrar (opcional)", example = "MB")
             @QueryParam("agencyId") @Size(max = 50)
-            @Pattern(regexp = "^[A-Za-z0-9_-]{0,50}$", message = "agencyId inválido") String agencyId) {
+            @Pattern(regexp = "^\\s*$|^[A-Za-z0-9_-]{1,50}$", message = "agencyId inválido") String agencyId) {
         if (agencyId != null && !agencyId.isBlank()) {
             return Response.ok(routeRepository.findByAgencyWithShapes(agencyId)).build();
         }

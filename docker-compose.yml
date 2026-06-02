@@ -9,6 +9,7 @@ services:
     command:
       - --local-infile=1
       - --default-authentication-plugin=mysql_native_password
+      - --event-scheduler=ON
     ports:
       - "3307:3306"
     volumes:

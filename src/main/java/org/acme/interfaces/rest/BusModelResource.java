@@ -3,6 +3,8 @@ package org.acme.interfaces.rest;
 import jakarta.inject.Inject;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -53,7 +55,7 @@ public class BusModelResource {
     })
     public Response getBusModel(
             @Parameter(description = "ID del modelo de bus", required = true, example = "1")
-            @PathParam("id") Long id) {
+            @PathParam("id") @Positive Long id) {
         return busModelRepository.findById(id)
                 .map(m -> Response.ok(m).build())
                 .orElse(Response.status(Response.Status.NOT_FOUND)
@@ -70,7 +72,7 @@ public class BusModelResource {
     })
     @RequestBody(description = "Datos del modelo de bus", required = true,
         content = @Content(schema = @Schema(implementation = BusModel.class)))
-    public Response createBusModel(BusModel model) {
+    public Response createBusModel(@Valid BusModel model) {
         try {
             BusModel created = busModelRepository.create(model);
             return Response.status(Response.Status.CREATED).entity(created).build();
@@ -94,8 +96,8 @@ public class BusModelResource {
         content = @Content(schema = @Schema(implementation = BusModel.class)))
     public Response updateBusModel(
             @Parameter(description = "ID del modelo de bus", required = true, example = "1")
-            @PathParam("id") Long id,
-            BusModel model) {
+            @PathParam("id") @Positive Long id,
+            @Valid BusModel model) {
         try {
             BusModel updated = busModelRepository.update(id, model);
             return Response.ok(updated).build();
@@ -119,7 +121,7 @@ public class BusModelResource {
     })
     public Response deleteBusModel(
             @Parameter(description = "ID del modelo de bus", required = true, example = "1")
-            @PathParam("id") Long id) {
+            @PathParam("id") @Positive Long id) {
         try {
             busModelRepository.delete(id);
             return Response.noContent().build();

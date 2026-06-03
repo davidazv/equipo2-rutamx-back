@@ -1,6 +1,12 @@
 package org.acme.domain.models;
 
 import java.math.BigDecimal;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 @Schema(description = "Modelo de autobús (eléctrico o diésel)")
@@ -10,36 +16,50 @@ public class BusModel {
     private Long id;
 
     @Schema(description = "Nombre comercial del modelo", example = "Yutong E12")
+    @NotBlank
+    @Size(max = 100)
+    @Pattern(regexp = "^[\\p{L}\\p{N} ._-]+$", message = "Nombre con caracteres no permitidos")
     private String name;
 
     @Schema(description = "Fabricante", example = "Yutong")
+    @Size(max = 100)
+    @Pattern(regexp = "^[\\p{L}\\p{N} ._-]*$", message = "Fabricante con caracteres no permitidos")
     private String manufacturer;
 
     @Schema(description = "Tipo de combustible: ELECTRIC o DIESEL")
+    @NotNull
     private FuelType fuelType;
 
     @Schema(description = "Autonomía en kilómetros", example = "300.00")
+    @DecimalMin(value = "0.0", inclusive = true)
     private BigDecimal autonomyKm;
 
     @Schema(description = "Capacidad de pasajeros", example = "90")
+    @Positive
     private Integer passengerCapacity;
 
     @Schema(description = "Costo unitario en USD", example = "350000.00")
+    @DecimalMin(value = "0.0", inclusive = true)
     private BigDecimal unitCostUsd;
 
     @Schema(description = "Capacidad de batería en kWh (solo eléctricos)", example = "281.00")
+    @DecimalMin(value = "0.0", inclusive = true)
     private BigDecimal batteryCapacityKwh;
 
     @Schema(description = "Consumo energético en kWh/km (solo eléctricos)", example = "0.94")
+    @DecimalMin(value = "0.0", inclusive = true)
     private BigDecimal energyConsumptionKwhKm;
 
     @Schema(description = "Consumo de combustible en L/km (solo diésel)", example = "0.35")
+    @DecimalMin(value = "0.0", inclusive = true)
     private BigDecimal fuelConsumptionLKm;
 
     @Schema(description = "Costo de mantenimiento por km en USD", example = "0.15")
+    @DecimalMin(value = "0.0", inclusive = true)
     private BigDecimal maintenanceCostPerKm;
 
     @Schema(description = "Emisiones CO2 en g/km (0 para eléctricos)", example = "0.00")
+    @DecimalMin(value = "0.0", inclusive = true)
     private BigDecimal co2EmissionsGKm;
 
     public BusModel() {}

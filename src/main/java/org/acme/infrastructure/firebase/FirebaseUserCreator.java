@@ -39,4 +39,9 @@ public class FirebaseUserCreator {
         FirebaseAuth.getInstance().updateUser(
                 new UserRecord.UpdateRequest(firebaseUuid).setDisabled(false));
     }
+
+    public void resetPassword(String firebaseUuid, String newPassword) throws FirebaseAuthException {
+        FirebaseAuth.getInstance().updateUser(
+                new UserRecord.UpdateRequest(firebaseUuid).setPassword(newPassword));
+    }
 }

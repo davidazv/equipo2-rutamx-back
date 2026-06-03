@@ -7,6 +7,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.application.dto.CreateUserDto;
+import org.acme.application.dto.ResetPasswordDto;
 import org.acme.application.dto.UpdateUserDto;
 import org.acme.application.exception.DuplicateEmailException;
 import org.acme.application.exception.UserAlreadyActiveException;
@@ -16,6 +17,7 @@ import org.acme.application.usecase.ActivateUserUseCase;
 import org.acme.application.usecase.CreateUserUseCase;
 import org.acme.application.usecase.DeleteUserUseCase;
 import org.acme.application.usecase.ExportUsersUseCase;
+import org.acme.application.usecase.ResetPasswordUseCase;
 import org.acme.application.usecase.SuspendUserUseCase;
 import org.acme.application.usecase.UpdateUserUseCase;
 import org.acme.domain.repository.UserRepository;
@@ -48,6 +50,7 @@ public class UserResource {
     private final SuspendUserUseCase suspendUserUseCase;
     private final ActivateUserUseCase activateUserUseCase;
     private final ExportUsersUseCase exportUsersUseCase;
+    private final ResetPasswordUseCase resetPasswordUseCase;
     private final AuthContext authContext;
 
     // Exception to the no-direct-repo-in-resource rule: read-only list/get-one
@@ -61,6 +64,7 @@ public class UserResource {
                         SuspendUserUseCase suspendUserUseCase,
                         ActivateUserUseCase activateUserUseCase,
                         ExportUsersUseCase exportUsersUseCase,
+                        ResetPasswordUseCase resetPasswordUseCase,
                         AuthContext authContext,
                         UserRepository userRepository) {
         this.createUserUseCase = createUserUseCase;
@@ -69,6 +73,7 @@ public class UserResource {
         this.suspendUserUseCase = suspendUserUseCase;
         this.activateUserUseCase = activateUserUseCase;
         this.exportUsersUseCase = exportUsersUseCase;
+        this.resetPasswordUseCase = resetPasswordUseCase;
         this.authContext = authContext;
         this.userRepository = userRepository;
     }
@@ -262,6 +267,35 @@ public class UserResource {
                     .build();
         } catch (Exception e) {
             log.severe("Unexpected error suspending user " + id + ": " + e.getMessage());
+            return Response.serverError().entity("Error inesperado").build();
+        }
+    }
+
+    @PATCH
+    @Path("/{id}/reset-password")
+    @Operation(summary = "Restablecer contraseña",
+        description = "Permite al ADMIN establecer una nueva contraseña para cualquier usuario sin requerir la contraseña actual. Página: Admin Panel > pestaña Usuarios. **Roles:** ADMIN")
+    @APIResponses({
+        @APIResponse(responseCode = "204", description = "Contraseña restablecida correctamente"),
+        @APIResponse(responseCode = "400", description = "Contraseña inválida"),
+        @APIResponse(responseCode = "404", description = "Usuario no encontrado"),
+        @APIResponse(responseCode = "500", description = "Error inesperado del servidor")
+    })
+    @RequestBody(description = "Nueva contraseña", required = true,
+        content = @Content(schema = @Schema(implementation = ResetPasswordDto.class)))
+    public Response resetPassword(
+            @Parameter(description = "ID del usuario", required = true, example = "1")
+            @PathParam("id") @Positive Long id,
+            @Valid ResetPasswordDto dto) {
+        try {
+            resetPasswordUseCase.execute(id, dto);
+            return Response.noContent().build();
+        } catch (UserNotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Usuario no encontrado")
+                    .build();
+        } catch (Exception e) {
+            log.severe("Unexpected error resetting password for user " + id + ": " + e.getMessage());
             return Response.serverError().entity("Error inesperado").build();
         }
     }

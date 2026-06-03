@@ -32,6 +32,7 @@ class UserResourceTest {
                 .thenAnswer(inv -> "firebase-uid-" + java.util.UUID.randomUUID());
         doNothing().when(firebaseUserCreator).deleteUser(anyString());
         doNothing().when(firebaseUserCreator).disableUser(anyString());
+        doNothing().when(firebaseUserCreator).resetPassword(anyString(), anyString());
     }
 
     @Test
@@ -267,5 +268,71 @@ class UserResourceTest {
                 .statusCode(200)
                 .header("Content-Disposition", org.hamcrest.Matchers.containsString("attachment"))
                 .header("Content-Disposition", org.hamcrest.Matchers.containsString("usuarios_"));
+    }
+
+    // ── Reset password ─────────────────────────────────────────────────────
+
+    @Test
+    void patchResetPasswordShouldReturn204WhenSuccessful() {
+        String createBody = """
+                {
+                  "firstName": "Reset",
+                  "lastName": "Pass",
+                  "email": "reset.pass@test.com",
+                  "password": "Password1",
+                  "roleId": 2
+                }
+                """;
+
+        Integer id = given()
+                .contentType(ContentType.JSON)
+                .body(createBody)
+                .when().post("/admin/users")
+                .then().statusCode(201)
+                .extract().path("id");
+
+        given()
+                .contentType(ContentType.JSON)
+                .body("{\"newPassword\": \"NuevaPass1\"}")
+                .when().patch("/admin/users/" + id + "/reset-password")
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    void patchResetPasswordShouldReturn404WhenUserNotFound() {
+        given()
+                .contentType(ContentType.JSON)
+                .body("{\"newPassword\": \"NuevaPass1\"}")
+                .when().patch("/admin/users/999999/reset-password")
+                .then()
+                .statusCode(404);
+    }
+
+    @Test
+    void patchResetPasswordShouldReturn400WhenPasswordInvalid() {
+        String createBody = """
+                {
+                  "firstName": "Bad",
+                  "lastName": "Pass",
+                  "email": "bad.pass@test.com",
+                  "password": "Password1",
+                  "roleId": 2
+                }
+                """;
+
+        Integer id = given()
+                .contentType(ContentType.JSON)
+                .body(createBody)
+                .when().post("/admin/users")
+                .then().statusCode(201)
+                .extract().path("id");
+
+        given()
+                .contentType(ContentType.JSON)
+                .body("{\"newPassword\": \"sinmayuscula\"}")
+                .when().patch("/admin/users/" + id + "/reset-password")
+                .then()
+                .statusCode(400);
     }
 }

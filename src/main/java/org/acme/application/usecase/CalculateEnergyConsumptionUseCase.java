@@ -41,6 +41,10 @@ public class CalculateEnergyConsumptionUseCase {
         }
 
         double distanceKm = route.getDistanceKm();
+        if (distanceKm <= 0) {
+            throw new IllegalArgumentException(
+                "No se puede calcular el consumo: la ruta '" + routeId + "' no tiene distancia registrada");
+        }
         double baseConsumption = busModel.getEnergyConsumptionKwhKm().doubleValue();
         double batteryCapacity = busModel.getBatteryCapacityKwh().doubleValue();
         int passengerCapacity = busModel.getPassengerCapacity();

@@ -156,15 +156,31 @@ public class RouteRepositoryImpl implements RouteRepository {
             "         sched.scheduled_minutes, freq.frequency_minutes, trips_freq.frequency_minutes " +
             "HAVING MAX(s.shape_dist_traveled) > 0";
 
+    // shape_dist_traveled is optional in GTFS (e.g. RTP does not populate it).
+    // When it is absent, compute the route length by summing ST_Distance_Sphere
+    // between consecutive shape points of the first trip that has a shape.
     private static final String ROUTE_BY_ID_WITH_DISTANCE_QUERY =
             "SELECT r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type, " +
-            "MAX(s.shape_dist_traveled) AS distance_km " +
+            "  CASE WHEN MAX(s.shape_dist_traveled) > 0 THEN MAX(s.shape_dist_traveled) " +
+            "       ELSE ( " +
+            "         SELECT SUM(ST_Distance_Sphere( " +
+            "                  POINT(s1.shape_pt_lon, s1.shape_pt_lat), " +
+            "                  POINT(s2.shape_pt_lon, s2.shape_pt_lat) " +
+            "                )) / 1000 " +
+            "         FROM shapes s1 " +
+            "         JOIN shapes s2 ON s2.shape_id = s1.shape_id " +
+            "                       AND s2.shape_pt_sequence = s1.shape_pt_sequence + 1 " +
+            "         WHERE s1.shape_id = ( " +
+            "           SELECT MIN(t2.shape_id) FROM trips t2 " +
+            "           WHERE t2.route_id = r.route_id AND t2.shape_id IS NOT NULL " +
+            "         ) " +
+            "       ) " +
+            "  END AS distance_km " +
             "FROM routes r " +
             "INNER JOIN trips t ON t.route_id = r.route_id " +
             "INNER JOIN shapes s ON s.shape_id = t.shape_id " +
             "WHERE r.route_id = ?1 " +
-            "GROUP BY r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type " +
-            "HAVING MAX(s.shape_dist_traveled) > 0";
+            "GROUP BY r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type";
 
     @Inject
     EntityManager entityManager;

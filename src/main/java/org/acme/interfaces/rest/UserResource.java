@@ -199,8 +199,9 @@ public class UserResource {
                     .entity("Usuario no encontrado")
                     .build();
         } catch (IllegalArgumentException e) {
+            log.warning("Invalid argument deleting user " + id + ": " + e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(e.getMessage())
+                    .entity("Operación no permitida")
                     .build();
         } catch (Exception e) {
             log.severe("Unexpected error deleting user " + id + ": " + e.getMessage());
@@ -262,8 +263,9 @@ public class UserResource {
                     .entity("El usuario ya está suspendido")
                     .build();
         } catch (IllegalArgumentException e) {
+            log.warning("Invalid argument suspending user " + id + ": " + e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(e.getMessage())
+                    .entity("Operación no permitida")
                     .build();
         } catch (Exception e) {
             log.severe("Unexpected error suspending user " + id + ": " + e.getMessage());

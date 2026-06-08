@@ -68,11 +68,14 @@ public class FuelSavingsResource {
         try {
             return Response.ok(calculateFuelSavingsUseCase.execute(routeId, modelId, buses, years)).build();
         } catch (RouteNotFoundException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            log.warning("Route not found: " + e.getMessage());
+            return Response.status(Response.Status.NOT_FOUND).entity("Ruta no encontrada").build();
         } catch (BusModelNotFoundException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            log.warning("Bus model not found: " + e.getMessage());
+            return Response.status(Response.Status.NOT_FOUND).entity("Modelo de autobús no encontrado").build();
         } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+            log.warning("Invalid argument calculating fuel savings: " + e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity("Parámetros inválidos").build();
         } catch (Exception e) {
             log.severe("Error inesperado calculando ahorro en combustible: " + e.getMessage());
             return Response.serverError().entity("Error inesperado").build();

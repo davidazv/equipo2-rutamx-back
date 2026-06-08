@@ -50,11 +50,14 @@ public class Co2SavingsResource {
         try {
             return Response.ok(calculateCo2SavingsUseCase.execute(busModelId)).build();
         } catch (BusModelNotFoundException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+            log.warning("Bus model not found: " + e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity("Modelo de autobús no encontrado").build();
         } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+            log.warning("Invalid argument calculating CO2 savings: " + e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity("Parámetros inválidos").build();
         } catch (NoGtfsDataException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            log.warning("No GTFS data: " + e.getMessage());
+            return Response.status(Response.Status.NOT_FOUND).entity("Datos GTFS no disponibles").build();
         } catch (Exception e) {
             log.severe("Error calculando ahorro CO2: " + e.getMessage());
             return Response.serverError().entity("Error inesperado al calcular ahorro de emisiones CO2").build();

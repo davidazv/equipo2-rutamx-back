@@ -2,6 +2,8 @@ package org.acme.application.usecase;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import com.google.firebase.auth.AuthErrorCode;
+import com.google.firebase.auth.FirebaseAuthException;
 import org.acme.application.exception.UserNotFoundException;
 import org.acme.domain.models.User;
 import org.acme.domain.repository.UserRepository;
@@ -41,9 +43,13 @@ public class DeleteUserUseCase {
 
         try {
             firebaseUserCreator.deleteUser(user.getFirebaseUuid());
-        } catch (Exception e) {
-            log.warning("Error deleting user from Firebase: " + e.getMessage());
-            throw new RuntimeException("Error al eliminar usuario en Firebase", e);
+        } catch (FirebaseAuthException e) {
+            if (AuthErrorCode.USER_NOT_FOUND.equals(e.getAuthErrorCode())) {
+                log.warning("User not found in Firebase, proceeding to delete from DB: " + user.getFirebaseUuid());
+            } else {
+                log.warning("Error deleting user from Firebase: " + e.getMessage());
+                throw new RuntimeException("Error al eliminar usuario en Firebase", e);
+            }
         }
 
         userRepository.delete(id);

@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: mysql:8
+    image: mysql:8.0
     container_name: rutamx-mysql
     restart: unless-stopped
     environment:
@@ -8,7 +8,6 @@ services:
       MYSQL_DATABASE: rutamx
     command:
       - --local-infile=1
-      - --default-authentication-plugin=mysql_native_password
       - --event-scheduler=ON
     ports:
       - "3307:3306"

@@ -6,6 +6,8 @@
 -- Stack:   Quarkus + Hibernate Panache
 -- ============================================================================
 
+SET NAMES utf8mb4;
+
 DROP DATABASE IF EXISTS rutamx;
 CREATE DATABASE IF NOT EXISTS rutamx
   CHARACTER SET utf8mb4
@@ -284,7 +286,7 @@ INSERT INTO roles (name, description) VALUES
 INSERT INTO users (email, firebase_UUID, first_name, last_name, role_id, status)
 VALUES (
   'admin@rutamx.com',
-  'wsY6rbYYcHNHqAO6cTLNy0Kqi913',
+  'R6OJ0u5lHVRWmSLazE0MlkweyMD3',
   'David',
   'Zárate',
   (SELECT id FROM roles WHERE name = 'ADMIN'),

@@ -28,19 +28,13 @@ public class StopTimeRepositoryImpl implements StopTimeRepository {
     @Override
     @Transactional
     public int createAll(List<StopTime> items) {
-        int count = 0;
-        for (StopTime item : items) {
+        return BatchPersister.persistAll(entityManager, items, 500, item -> {
             StopTimeEntity entity = StopTimeMapper.toEntity(item);
             TripEntity trip = entityManager.getReference(TripEntity.class, item.getTripId());
             entity.setTrip(trip);
             StopEntity stop = entityManager.getReference(StopEntity.class, item.getStopId());
             entity.setStop(stop);
-            entityManager.persist(entity);
-            if (++count % 500 == 0) {
-                entityManager.flush();
-                entityManager.clear();
-            }
-        }
-        return count;
+            return entity;
+        });
     }
 }

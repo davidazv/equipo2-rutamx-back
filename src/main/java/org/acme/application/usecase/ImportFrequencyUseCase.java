@@ -8,10 +8,7 @@ import org.acme.domain.models.Frequency;
 import org.acme.domain.repository.FrequencyRepository;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @ApplicationScoped
 public class ImportFrequencyUseCase {
@@ -37,11 +34,8 @@ public class ImportFrequencyUseCase {
 
         frequencyRepository.deleteAll();
 
-        List<Frequency> deduped = new ArrayList<>();
-        Set<String> seen = new HashSet<>();
-        for (Frequency f : result.getItems()) {
-            if (seen.add(f.getTripId() + "|" + f.getStartTime())) deduped.add(f);
-        }
+        List<Frequency> deduped = ImportSupport.dedupBy(result.getItems(),
+                f -> f.getTripId() + "|" + f.getStartTime());
         int imported = frequencyRepository.createAll(deduped);
         return new CsvImportResult("frequencies", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());

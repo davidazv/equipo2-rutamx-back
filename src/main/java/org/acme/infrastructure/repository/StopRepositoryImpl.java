@@ -37,15 +37,6 @@ public class StopRepositoryImpl implements StopRepository {
     @Override
     @Transactional
     public int createAll(List<Stop> items) {
-        int count = 0;
-        for (Stop item : items) {
-            StopEntity entity = StopMapper.toEntity(item);
-            entityManager.persist(entity);
-            if (++count % 1000 == 0) {
-                entityManager.flush();
-                entityManager.clear();
-            }
-        }
-        return count;
+        return BatchPersister.persistAll(entityManager, items, 1000, StopMapper::toEntity);
     }
 }

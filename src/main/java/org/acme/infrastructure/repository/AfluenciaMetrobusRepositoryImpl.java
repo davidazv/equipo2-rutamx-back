@@ -7,7 +7,6 @@ import jakarta.transaction.Transactional;
 import org.acme.domain.models.AfluenciaMetrobus;
 import org.acme.domain.models.AfluenciaResumen;
 import org.acme.domain.repository.AfluenciaMetrobusRepository;
-import org.acme.infrastructure.entities.AfluenciaMetrobusEntity;
 import org.acme.infrastructure.mapper.AfluenciaMetrobusMapper;
 
 import java.time.LocalDate;
@@ -112,15 +111,6 @@ public class AfluenciaMetrobusRepositoryImpl implements AfluenciaMetrobusReposit
     @Override
     @Transactional
     public int createAll(List<AfluenciaMetrobus> items) {
-        int count = 0;
-        for (AfluenciaMetrobus item : items) {
-            AfluenciaMetrobusEntity entity = AfluenciaMetrobusMapper.toEntity(item);
-            entityManager.persist(entity);
-            if (++count % 500 == 0) {
-                entityManager.flush();
-                entityManager.clear();
-            }
-        }
-        return count;
+        return BatchPersister.persistAll(entityManager, items, 500, AfluenciaMetrobusMapper::toEntity);
     }
 }

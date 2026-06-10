@@ -10,10 +10,7 @@ import org.acme.domain.repository.BusModelRepository;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @ApplicationScoped
 public class ImportBusModelUseCase {
@@ -41,11 +38,7 @@ public class ImportBusModelUseCase {
 
         busModelRepository.deleteAll();
 
-        List<BusModel> deduped = new ArrayList<>();
-        Set<String> seen = new HashSet<>();
-        for (BusModel m : result.getItems()) {
-            if (seen.add(m.getName())) deduped.add(m);
-        }
+        List<BusModel> deduped = ImportSupport.dedupBy(result.getItems(), BusModel::getName);
         int imported = busModelRepository.createAll(deduped);
         return new CsvImportResult("bus_model", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());

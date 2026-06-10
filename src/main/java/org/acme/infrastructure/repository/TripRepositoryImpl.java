@@ -118,19 +118,13 @@ public class TripRepositoryImpl implements TripRepository {
     @Override
     @Transactional
     public int createAll(List<Trip> items) {
-        int count = 0;
-        for (Trip item : items) {
+        return BatchPersister.persistAll(entityManager, items, 200, item -> {
             TripEntity entity = TripMapper.toEntity(item);
             RouteEntity route = entityManager.getReference(RouteEntity.class, item.getRouteId());
             entity.setRoute(route);
             CalendarEntity calendar = entityManager.getReference(CalendarEntity.class, item.getServiceId());
             entity.setCalendar(calendar);
-            entityManager.persist(entity);
-            if (++count % 200 == 0) {
-                entityManager.flush();
-                entityManager.clear();
-            }
-        }
-        return count;
+            return entity;
+        });
     }
 }

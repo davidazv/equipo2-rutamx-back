@@ -100,17 +100,11 @@ public class BusModelRepositoryImpl implements BusModelRepository {
     @Override
     @Transactional
     public int createAll(List<BusModel> items) {
-        int count = 0;
-        for (BusModel item : items) {
+        return BatchPersister.persistAll(entityManager, items, 50, item -> {
             BusModelEntity entity = BusModelMapper.toEntity(item);
             entity.setCreatedAt(LocalDateTime.now());
             entity.setUpdatedAt(LocalDateTime.now());
-            entityManager.persist(entity);
-            if (++count % 50 == 0) {
-                entityManager.flush();
-                entityManager.clear();
-            }
-        }
-        return count;
+            return entity;
+        });
     }
 }

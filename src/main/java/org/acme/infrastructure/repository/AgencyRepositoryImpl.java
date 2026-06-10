@@ -89,15 +89,6 @@ public class AgencyRepositoryImpl implements AgencyRepository {
     @Override
     @Transactional
     public int createAll(List<Agency> items) {
-        int count = 0;
-        for (Agency item : items) {
-            AgencyEntity entity = AgencyMapper.toEntity(item);
-            entityManager.persist(entity);
-            if (++count % 50 == 0) {
-                entityManager.flush();
-                entityManager.clear();
-            }
-        }
-        return count;
+        return BatchPersister.persistAll(entityManager, items, 50, AgencyMapper::toEntity);
     }
 }

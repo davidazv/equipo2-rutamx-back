@@ -60,17 +60,11 @@ public class FrequencyRepositoryImpl implements FrequencyRepository {
     @Override
     @Transactional
     public int createAll(List<Frequency> items) {
-        int count = 0;
-        for (Frequency item : items) {
+        return BatchPersister.persistAll(entityManager, items, 200, item -> {
             FrequencyEntity entity = FrequencyMapper.toEntity(item);
             TripEntity trip = entityManager.getReference(TripEntity.class, item.getTripId());
             entity.setTrip(trip);
-            entityManager.persist(entity);
-            if (++count % 200 == 0) {
-                entityManager.flush();
-                entityManager.clear();
-            }
-        }
-        return count;
+            return entity;
+        });
     }
 }

@@ -37,15 +37,6 @@ public class ShapeRepositoryImpl implements ShapeRepository {
     @Override
     @Transactional
     public int createAll(List<Shape> items) {
-        int count = 0;
-        for (Shape item : items) {
-            ShapeEntity entity = ShapeMapper.toEntity(item);
-            entityManager.persist(entity);
-            if (++count % 500 == 0) {
-                entityManager.flush();
-                entityManager.clear();
-            }
-        }
-        return count;
+        return BatchPersister.persistAll(entityManager, items, 500, ShapeMapper::toEntity);
     }
 }

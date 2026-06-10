@@ -12,10 +12,7 @@ import java.math.BigDecimal;
 import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @ApplicationScoped
 public class ImportAfluenciaUseCase {
@@ -42,12 +39,8 @@ public class ImportAfluenciaUseCase {
 
         afluenciaMetrobusRepository.deleteAll();
 
-        List<AfluenciaMetrobus> deduped = new ArrayList<>();
-        Set<String> seen = new HashSet<>();
-        for (AfluenciaMetrobus a : result.getItems()) {
-            String key = a.getFecha() + "|" + a.getLinea() + "|" + a.getTipoPago();
-            if (seen.add(key)) deduped.add(a);
-        }
+        List<AfluenciaMetrobus> deduped = ImportSupport.dedupBy(result.getItems(),
+                a -> a.getFecha() + "|" + a.getLinea() + "|" + a.getTipoPago());
         int imported = afluenciaMetrobusRepository.createAll(deduped);
         return new CsvImportResult("afluencia_metrobus", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());

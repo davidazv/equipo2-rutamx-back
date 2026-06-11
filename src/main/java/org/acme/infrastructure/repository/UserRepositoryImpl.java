@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import org.acme.domain.models.PagedResult;
 import org.acme.domain.models.User;
 import org.acme.domain.repository.UserRepository;
 import org.acme.infrastructure.entities.RoleEntity;
@@ -65,6 +66,29 @@ public class UserRepositoryImpl implements UserRepository {
                 .stream()
                 .map(UserMapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public PagedResult<User> findPaginated(int page, int size) {
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, Math.min(size, 200));
+
+        long total = entityManager
+                .createQuery("SELECT COUNT(u) FROM UserEntity u", Long.class)
+                .getSingleResult();
+
+        List<User> items = entityManager
+                .createQuery(
+                        "SELECT u FROM UserEntity u LEFT JOIN FETCH u.role ORDER BY u.id",
+                        UserEntity.class)
+                .setFirstResult(safePage * safeSize)
+                .setMaxResults(safeSize)
+                .getResultList()
+                .stream()
+                .map(UserMapper::toDomain)
+                .collect(Collectors.toList());
+
+        return new PagedResult<>(items, total, safePage, safeSize);
     }
 
     @Override

@@ -102,7 +102,8 @@ public class RouteResource {
         try {
             return Response.ok(getTripsByDayUseCase.execute()).build();
         } catch (NoGtfsDataException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            log.warning("No GTFS data: " + e.getMessage());
+            return Response.status(Response.Status.NOT_FOUND).entity("Datos GTFS no disponibles").build();
         } catch (Exception e) {
             log.severe("Error listing trips by day: " + e.getMessage());
             return Response.serverError().entity("Error inesperado al obtener viajes por día").build();
@@ -148,9 +149,11 @@ public class RouteResource {
         try {
             return Response.ok(recommendBusModelUseCase.execute(routeId, targetOccupancy)).build();
         } catch (RouteNotFoundException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            log.warning("Route not found: " + e.getMessage());
+            return Response.status(Response.Status.NOT_FOUND).entity("Ruta no encontrada").build();
         } catch (NoDemandDataException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            log.warning("No demand data: " + e.getMessage());
+            return Response.status(Response.Status.NOT_FOUND).entity("Sin datos de demanda para la ruta").build();
         } catch (Exception e) {
             log.severe("Error generating bus model recommendation: " + e.getMessage());
             return Response.serverError().entity("Error al generar recomendación de modelo").build();

@@ -164,6 +164,12 @@ CREATE TABLE shapes (
 
 CREATE INDEX idx_shapes_shape_id ON shapes (shape_id);
 
+-- Optimización v8 (ver docs/seccion-4-base-de-datos.md §4.5)
+-- O2: cubriente para MAX(shape_dist_traveled) en /travel-times y /cmo/dashboard
+CREATE INDEX idx_shapes_dist_cover ON shapes (shape_id, shape_dist_traveled);
+-- O5: cubriente para /api/routes/shapes (elimina sort + lookup a tabla base)
+CREATE INDEX idx_shapes_full_cover ON shapes (shape_id, shape_pt_sequence, shape_pt_lon, shape_pt_lat, shape_dist_traveled);
+
 -- ────────────────────────────────────────────────────────────────────────────
 -- 8. TRIPS  (GTFS: trips.txt)
 --    Viajes programados (HU19, HU21)
@@ -222,6 +228,10 @@ CREATE TABLE stop_times (
 
 CREATE INDEX idx_stop_times_trip ON stop_times (trip_id);
 CREATE INDEX idx_stop_times_stop ON stop_times (stop_id);
+
+-- Optimización v8 (ver docs/seccion-4-base-de-datos.md §4.5)
+-- O1: cubriente para subqueries sched + trips_freq en /travel-times
+CREATE INDEX idx_stop_times_cover ON stop_times (trip_id, stop_sequence, arrival_time, departure_time);
 
 -- ────────────────────────────────────────────────────────────────────────────
 -- 11. FREQUENCIES  (GTFS: frequencies.txt)

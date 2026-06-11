@@ -1,0 +1,2 @@
+faker==30.8.2
+mysql-connector-python==9.1.0

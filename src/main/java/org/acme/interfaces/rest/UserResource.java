@@ -2,7 +2,10 @@ package org.acme.interfaces.rest;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -79,11 +82,15 @@ public class UserResource {
     }
 
     @GET
-    @Operation(summary = "Listar usuarios",
-        description = "Página: Admin Panel > pestaña Usuarios. **Roles:** ADMIN")
-    @APIResponse(responseCode = "200", description = "Lista de usuarios")
-    public Response listUsers() {
-        return Response.ok(userRepository.findAll()).build();
+    @Operation(summary = "Listar usuarios (paginado)",
+        description = "Devuelve usuarios paginados. Parámetros: page (>=0, default 0), size (1-200, default 50). Si no se envían se asume primera página de 50. Página: Admin Panel > pestaña Usuarios. **Roles:** ADMIN")
+    @APIResponse(responseCode = "200", description = "Página de usuarios con metadata (totalItems, totalPages, hasNext, hasPrevious)")
+    public Response listUsers(
+            @Parameter(description = "Número de página, 0-indexado", example = "0")
+            @QueryParam("page") @DefaultValue("0") @PositiveOrZero int page,
+            @Parameter(description = "Tamaño de página (1-200)", example = "50")
+            @QueryParam("size") @DefaultValue("50") @Min(1) @Max(200) int size) {
+        return Response.ok(userRepository.findPaginated(page, size)).build();
     }
 
     @GET

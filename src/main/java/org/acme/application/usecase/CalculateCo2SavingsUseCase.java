@@ -85,7 +85,7 @@ public class CalculateCo2SavingsUseCase {
                     .put(a.getDayOfWeek(), a.getTotalAfluencia());
         }
         if (!afluenciaByLinea.isEmpty()) {
-            log.info("afluenciaByLinea keys sample: " + afluenciaByLinea.keySet().stream().limit(5).toList());
+            log.log(java.util.logging.Level.INFO, "afluenciaByLinea keys sample: {0}", afluenciaByLinea.keySet().stream().limit(5).toList());
         } else {
             log.warning("afluencia_metrobus no devolvió datos para el último año — se usará fallback constante");
         }
@@ -129,7 +129,7 @@ public class CalculateCo2SavingsUseCase {
 
         results.sort((a, b) -> Double.compare(b.getScore(), a.getScore()));
 
-        log.info("CO2 savings calculado para " + results.size() + " rutas, busModelId=" + busModelId);
+        log.log(java.util.logging.Level.INFO, "CO2 savings calculado para {0} rutas, busModelId={1}", new Object[]{results.size(), busModelId});
         return results;
     }
 

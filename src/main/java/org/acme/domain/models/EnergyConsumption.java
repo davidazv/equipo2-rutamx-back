@@ -12,7 +12,9 @@ public class EnergyConsumption {
     private double remainingRangeKm;
     private boolean canCompleteRoute;
 
-    public EnergyConsumption() {}
+    public EnergyConsumption() {
+        // intentionally empty
+    }
 
     public String getRouteId() { return routeId; }
     public void setRouteId(String routeId) { this.routeId = routeId; }

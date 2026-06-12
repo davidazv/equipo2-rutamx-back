@@ -16,13 +16,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class AgencyRepositoryImpl implements AgencyRepository {
 
+    private final EntityManager entityManager;
+
     @Inject
-    EntityManager entityManager;
+    public AgencyRepositoryImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     public List<Agency> findAll() {
@@ -31,7 +34,7 @@ public class AgencyRepositoryImpl implements AgencyRepository {
                 .getResultList()
                 .stream()
                 .map(AgencyMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

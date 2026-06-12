@@ -116,9 +116,8 @@ public class GenerateComparativeReportUseCase {
         report.setTcoProjection(tcoProjection);
         report.setPaybackYear(paybackYear);
 
-        log.info("Reporte comparativo generado: ruta=" + routeId
-                + " eléctrico=" + electricModelId + " diésel=" + dieselModelId
-                + " buses=" + numberOfBuses + " años=" + projectionYears);
+        log.log(java.util.logging.Level.INFO, "Reporte comparativo generado: buses={0}, anios={1}",
+                new Object[]{numberOfBuses, projectionYears});
 
         return report;
     }

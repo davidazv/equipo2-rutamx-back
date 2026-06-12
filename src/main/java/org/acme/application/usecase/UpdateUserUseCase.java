@@ -22,7 +22,7 @@ public class UpdateUserUseCase {
     }
 
     public User execute(Long id, UpdateUserDto dto) {
-        log.info("Updating user id: " + id);
+        log.log(java.util.logging.Level.INFO, "Updating user id: {0}", id);
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));

@@ -13,8 +13,12 @@ import java.util.Optional;
 @ApplicationScoped
 public class RoleRepositoryImpl implements RoleRepository {
 
+    private final EntityManager entityManager;
+
     @Inject
-    EntityManager entityManager;
+    public RoleRepositoryImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     public Optional<Role> findById(Long id) {

@@ -26,7 +26,7 @@ public class ResetPasswordUseCase {
     }
 
     public void execute(Long id, ResetPasswordDto dto) {
-        log.info("Resetting password for user id: " + id);
+        log.log(java.util.logging.Level.INFO, "Resetting password for user id: {0}", id);
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
@@ -34,8 +34,8 @@ public class ResetPasswordUseCase {
         try {
             firebaseUserCreator.resetPassword(user.getFirebaseUuid(), dto.getNewPassword());
         } catch (Exception e) {
-            log.warning("Error resetting password in Firebase: " + e.getMessage());
-            throw new RuntimeException("Error al restablecer la contraseña en Firebase", e);
+            log.log(java.util.logging.Level.WARNING, "Error resetting password in Firebase: {0}", e.getMessage());
+            throw new IllegalStateException("Error al restablecer la contraseña en Firebase", e);
         }
     }
 }

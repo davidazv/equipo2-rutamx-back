@@ -15,7 +15,9 @@ public class ResetPasswordDto {
              message = "La contraseña debe tener al menos una mayúscula y un dígito")
     private String newPassword;
 
-    public ResetPasswordDto() {}
+    public ResetPasswordDto() {
+        // intentionally empty
+    }
 
     public String getNewPassword() { return newPassword; }
     public void setNewPassword(String newPassword) { this.newPassword = newPassword; }

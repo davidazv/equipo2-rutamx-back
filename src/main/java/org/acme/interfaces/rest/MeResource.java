@@ -10,7 +10,6 @@ import org.acme.domain.models.User;
 import org.acme.infrastructure.security.AuthContext;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/api/me")
@@ -30,11 +29,9 @@ public class MeResource {
         summary = "Perfil del usuario autenticado",
         description = "Devuelve id, email, nombre y rol del usuario que presenta el token. " +
                       "Accesible para ADMIN, CEO, COO y CMO. Usado por el login para la redirección por rol.")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Perfil del usuario"),
-        @APIResponse(responseCode = "401", description = "Token ausente o inválido"),
-        @APIResponse(responseCode = "403", description = "Cuenta suspendida o rol no reconocido")
-    })
+    @APIResponse(responseCode = "200", description = "Perfil del usuario")
+    @APIResponse(responseCode = "401", description = "Token ausente o inválido")
+    @APIResponse(responseCode = "403", description = "Cuenta suspendida o rol no reconocido")
     public Response getMe() {
         User user = authContext.getUser();
         if (user == null) {

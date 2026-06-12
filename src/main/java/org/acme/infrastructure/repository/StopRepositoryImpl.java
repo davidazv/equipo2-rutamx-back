@@ -10,13 +10,16 @@ import org.acme.infrastructure.entities.StopEntity;
 import org.acme.infrastructure.mapper.StopMapper;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class StopRepositoryImpl implements StopRepository {
 
+    private final EntityManager entityManager;
+
     @Inject
-    EntityManager entityManager;
+    public StopRepositoryImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     public List<Stop> findAll() {
@@ -25,7 +28,7 @@ public class StopRepositoryImpl implements StopRepository {
                 .getResultList()
                 .stream()
                 .map(StopMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

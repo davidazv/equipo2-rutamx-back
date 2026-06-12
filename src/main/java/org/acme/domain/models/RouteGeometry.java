@@ -13,7 +13,9 @@ public class RouteGeometry {
     private Double distanceKm;
     private List<double[]> coordinates;
 
-    public RouteGeometry() {}
+    public RouteGeometry() {
+        // intentionally empty
+    }
 
     public String getRouteId() { return routeId; }
     public void setRouteId(String routeId) { this.routeId = routeId; }

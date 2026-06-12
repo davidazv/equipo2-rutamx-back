@@ -10,6 +10,7 @@ public class StopTime {
     private Byte timepoint;
 
     public StopTime() {
+        // intentionally empty
     }
 
     public String getTripId() {

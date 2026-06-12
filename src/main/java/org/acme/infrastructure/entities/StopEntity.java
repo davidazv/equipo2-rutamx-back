@@ -26,7 +26,9 @@ public class StopEntity {
     @Column(name = "wheelchair_boarding")
     private Byte wheelchairBoarding;
 
-    public StopEntity() {}
+    public StopEntity() {
+        // intentionally empty
+    }
 
     public String getStopId() { return stopId; }
     public void setStopId(String stopId) { this.stopId = stopId; }

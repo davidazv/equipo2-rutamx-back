@@ -15,9 +15,9 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -126,8 +126,8 @@ class ImportCalendarUseCaseTest {
         ArgumentCaptor<List<Calendar>> captor = ArgumentCaptor.forClass(List.class);
         verify(calendarRepository).createAll(captor.capture());
         Calendar cal = captor.getValue().get(0);
-        assertEquals(LocalDate.of(2026, 1, 1), cal.getStartDate());
-        assertEquals(LocalDate.of(2026, 12, 31), cal.getEndDate());
+        assertEquals(LocalDate.of(2026, Month.JANUARY, 1), cal.getStartDate());
+        assertEquals(LocalDate.of(2026, Month.DECEMBER, 31), cal.getEndDate());
     }
 
     @Test
@@ -149,7 +149,7 @@ class ImportCalendarUseCaseTest {
         ArgumentCaptor<List<Calendar>> captor = ArgumentCaptor.forClass(List.class);
         verify(calendarRepository).createAll(captor.capture());
         Calendar cal = captor.getValue().get(0);
-        assertEquals(LocalDate.of(2026, 1, 1), cal.getStartDate());
+        assertEquals(LocalDate.of(2026, Month.JANUARY, 1), cal.getStartDate());
     }
 
     private Calendar buildCalendar(String serviceId) {
@@ -162,8 +162,8 @@ class ImportCalendarUseCaseTest {
         c.setFriday((byte) 1);
         c.setSaturday((byte) 0);
         c.setSunday((byte) 0);
-        c.setStartDate(LocalDate.of(2026, 1, 1));
-        c.setEndDate(LocalDate.of(2026, 12, 31));
+        c.setStartDate(LocalDate.of(2026, Month.JANUARY, 1));
+        c.setEndDate(LocalDate.of(2026, Month.DECEMBER, 31));
         return c;
     }
 

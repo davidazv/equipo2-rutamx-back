@@ -6,7 +6,9 @@ public class AfluenciaResumen {
     private int dayOfWeek;
     private double totalAfluencia;
 
-    public AfluenciaResumen() {}
+    public AfluenciaResumen() {
+        // intentionally empty
+    }
 
     public AfluenciaResumen(String linea, int dayOfWeek, double totalAfluencia) {
         this.linea = linea;

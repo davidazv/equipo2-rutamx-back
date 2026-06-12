@@ -10,13 +10,16 @@ import org.acme.infrastructure.entities.CalendarEntity;
 import org.acme.infrastructure.mapper.CalendarMapper;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class CalendarRepositoryImpl implements CalendarRepository {
 
+    private final EntityManager entityManager;
+
     @Inject
-    EntityManager entityManager;
+    public CalendarRepositoryImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     public List<Calendar> findAll() {
@@ -25,7 +28,7 @@ public class CalendarRepositoryImpl implements CalendarRepository {
                 .getResultList()
                 .stream()
                 .map(CalendarMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

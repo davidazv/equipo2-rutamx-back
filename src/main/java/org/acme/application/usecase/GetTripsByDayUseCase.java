@@ -91,7 +91,7 @@ public class GetTripsByDayUseCase {
             results.add(result);
         }
 
-        log.info("Trips-by-day calculado para " + results.size() + " rutas");
+        log.log(java.util.logging.Level.INFO, "Trips-by-day calculado para {0} rutas", results.size());
         return results;
     }
 }

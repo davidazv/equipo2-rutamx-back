@@ -10,7 +10,9 @@ public class Shape {
     private int shapePtSequence;
     private BigDecimal shapeDistTraveled;
 
-    public Shape() {}
+    public Shape() {
+        // intentionally empty
+    }
 
     public String getShapeId() { return shapeId; }
     public void setShapeId(String shapeId) { this.shapeId = shapeId; }

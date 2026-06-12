@@ -61,8 +61,8 @@ public class CalculateEnergyConsumptionUseCase {
 
         boolean canComplete = batteryPercentAfter > FleetConstants.MIN_BATTERY_PERCENT;
 
-        log.info("Consumo energético: ruta=" + routeId + " modelo=" + busModelId
-                + " ocupación=" + occupancyPercent + "% consumo=" + String.format("%.1f", consumptionKwh) + " kWh");
+        log.log(java.util.logging.Level.INFO, "Consumo energético calculado: ocupacion={0}% consumo={1} kWh",
+                new Object[]{occupancyPercent, String.format("%.1f", consumptionKwh)});
 
         EnergyConsumption result = new EnergyConsumption();
         result.setRouteId(routeId);

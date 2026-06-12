@@ -16,8 +16,12 @@ import java.util.List;
 @ApplicationScoped
 public class StopTimeRepositoryImpl implements StopTimeRepository {
 
+    private final EntityManager entityManager;
+
     @Inject
-    EntityManager entityManager;
+    public StopTimeRepositoryImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     @Transactional

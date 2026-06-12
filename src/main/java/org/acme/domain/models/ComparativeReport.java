@@ -27,7 +27,9 @@ public class ComparativeReport {
     private List<TcoDataPoint> tcoProjection;
     private int paybackYear;
 
-    public ComparativeReport() {}
+    public ComparativeReport() {
+        // intentionally empty
+    }
 
     public String getRouteId() { return routeId; }
     public void setRouteId(String routeId) { this.routeId = routeId; }

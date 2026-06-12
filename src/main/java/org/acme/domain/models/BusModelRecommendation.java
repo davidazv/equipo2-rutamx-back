@@ -18,7 +18,9 @@ public class BusModelRecommendation {
     private DemandSummary demand;
     private RecommendationsByDay recommendations;
 
-    public BusModelRecommendation() {}
+    public BusModelRecommendation() {
+        // intentionally empty
+    }
 
     // ── Nested types ────────────────────────────────────────────────────────
 
@@ -27,7 +29,9 @@ public class BusModelRecommendation {
         private long avgSaturday;
         private long avgSunday;
 
-        public DemandSummary() {}
+        public DemandSummary() {
+            // intentionally empty
+        }
 
         public long getAvgWeekday() { return avgWeekday; }
         public void setAvgWeekday(long avgWeekday) { this.avgWeekday = avgWeekday; }
@@ -44,7 +48,9 @@ public class BusModelRecommendation {
         private int requiredCapacity;
         private List<BusModelRank> models;
 
-        public DayRecommendation() {}
+        public DayRecommendation() {
+            // intentionally empty
+        }
 
         public long getPeakHourDemand() { return peakHourDemand; }
         public void setPeakHourDemand(long peakHourDemand) { this.peakHourDemand = peakHourDemand; }
@@ -61,7 +67,9 @@ public class BusModelRecommendation {
         private DayRecommendation saturday;
         private DayRecommendation sunday;
 
-        public RecommendationsByDay() {}
+        public RecommendationsByDay() {
+            // intentionally empty
+        }
 
         public DayRecommendation getWeekday() { return weekday; }
         public void setWeekday(DayRecommendation weekday) { this.weekday = weekday; }

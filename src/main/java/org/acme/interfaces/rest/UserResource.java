@@ -31,11 +31,11 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import jakarta.enterprise.context.RequestScoped;
 
+import java.time.ZoneOffset;
 import java.util.logging.Logger;
 
 @Path("/admin/users")
@@ -46,6 +46,9 @@ import java.util.logging.Logger;
 public class UserResource {
 
     private static final Logger log = Logger.getLogger(UserResource.class.getName());
+
+    private static final String ADMIN_ONLY = "Solo el rol ADMIN";
+    private static final String ERROR_INESPERADO = "Error inesperado";
 
     private final CreateUserUseCase createUserUseCase;
     private final UpdateUserUseCase updateUserUseCase;
@@ -98,17 +101,15 @@ public class UserResource {
     @Produces("text/csv")
     @Operation(summary = "Exportar usuarios en CSV",
         description = "Genera un archivo CSV con todos los usuarios. Página: Admin Panel > pestaña Usuarios. **Roles:** ADMIN")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Archivo CSV con los usuarios",
-            content = @Content(mediaType = "text/csv")),
-        @APIResponse(responseCode = "403", description = "El usuario autenticado no tiene rol ADMIN")
-    })
+    @APIResponse(responseCode = "200", description = "Archivo CSV con los usuarios",
+        content = @Content(mediaType = "text/csv"))
+    @APIResponse(responseCode = "403", description = "El usuario autenticado no tiene rol ADMIN")
     public Response exportUsers() {
         if (authContext.getUser() == null || !"ADMIN".equals(authContext.getUser().getRoleName())) {
             return Response.status(Response.Status.FORBIDDEN)
-                    .entity("Solo el rol ADMIN puede exportar usuarios").build();
+                    .entity(ADMIN_ONLY + " puede exportar usuarios").build();
         }
-        String today = java.time.LocalDate.now().toString();
+        String today = java.time.LocalDate.now(ZoneOffset.UTC).toString();
         String filename = "usuarios_" + today + ".csv";
         return Response.ok(exportUsersUseCase.execute())
                 .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
@@ -119,10 +120,8 @@ public class UserResource {
     @Path("/{id}")
     @Operation(summary = "Obtener usuario por ID",
         description = "Página: Admin Panel > pestaña Usuarios. **Roles:** ADMIN")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Usuario encontrado"),
-        @APIResponse(responseCode = "404", description = "Usuario no encontrado")
-    })
+    @APIResponse(responseCode = "200", description = "Usuario encontrado")
+    @APIResponse(responseCode = "404", description = "Usuario no encontrado")
     public Response getUser(
             @Parameter(description = "ID del usuario", required = true, example = "1")
             @PathParam("id") @Positive Long id) {
@@ -135,12 +134,10 @@ public class UserResource {
     @POST
     @Operation(summary = "Crear usuario",
         description = "Crea un nuevo usuario en Firebase y en la base de datos. Página: Admin Panel > pestaña Usuarios. **Roles:** ADMIN")
-    @APIResponses({
-        @APIResponse(responseCode = "201", description = "Usuario creado exitosamente"),
-        @APIResponse(responseCode = "400", description = "Datos de entrada inválidos"),
-        @APIResponse(responseCode = "409", description = "El correo ya está registrado"),
-        @APIResponse(responseCode = "500", description = "Error inesperado del servidor")
-    })
+    @APIResponse(responseCode = "201", description = "Usuario creado exitosamente")
+    @APIResponse(responseCode = "400", description = "Datos de entrada inválidos")
+    @APIResponse(responseCode = "409", description = "El correo ya está registrado")
+    @APIResponse(responseCode = "500", description = "Error inesperado del servidor")
     @RequestBody(description = "Datos del nuevo usuario", required = true,
         content = @Content(schema = @Schema(implementation = CreateUserDto.class)))
     public Response createUser(@Valid CreateUserDto dto) {
@@ -153,8 +150,8 @@ public class UserResource {
                     .entity("El correo ya está registrado")
                     .build();
         } catch (Exception e) {
-            log.severe("Unexpected error creating user: " + e.getMessage());
-            return Response.serverError().entity("Error inesperado").build();
+            log.log(java.util.logging.Level.SEVERE, "Unexpected error creating user: {0}", e.getMessage());
+            return Response.serverError().entity(ERROR_INESPERADO).build();
         }
     }
 
@@ -162,11 +159,9 @@ public class UserResource {
     @Path("/{id}")
     @Operation(summary = "Actualizar usuario",
         description = "Actualiza nombre y/o rol de un usuario existente. Página: Admin Panel > pestaña Usuarios. **Roles:** ADMIN")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Usuario actualizado"),
-        @APIResponse(responseCode = "404", description = "Usuario no encontrado"),
-        @APIResponse(responseCode = "500", description = "Error inesperado del servidor")
-    })
+    @APIResponse(responseCode = "200", description = "Usuario actualizado")
+    @APIResponse(responseCode = "404", description = "Usuario no encontrado")
+    @APIResponse(responseCode = "500", description = "Error inesperado del servidor")
     @RequestBody(description = "Campos a actualizar", required = true,
         content = @Content(schema = @Schema(implementation = UpdateUserDto.class)))
     public Response updateUser(
@@ -180,8 +175,8 @@ public class UserResource {
                     .entity("Usuario no encontrado")
                     .build();
         } catch (Exception e) {
-            log.severe("Unexpected error updating user " + id + ": " + e.getMessage());
-            return Response.serverError().entity("Error inesperado").build();
+            log.log(java.util.logging.Level.SEVERE, "Unexpected error updating user: {0}", e.getMessage());
+            return Response.serverError().entity(ERROR_INESPERADO).build();
         }
     }
 
@@ -189,12 +184,10 @@ public class UserResource {
     @Path("/{id}")
     @Operation(summary = "Eliminar usuario",
         description = "Elimina el usuario. Un ADMIN no puede eliminarse a sí mismo. Página: Admin Panel > pestaña Usuarios. **Roles:** ADMIN")
-    @APIResponses({
-        @APIResponse(responseCode = "204", description = "Usuario eliminado"),
-        @APIResponse(responseCode = "400", description = "Operación no permitida (p.ej. auto-eliminación)"),
-        @APIResponse(responseCode = "404", description = "Usuario no encontrado"),
-        @APIResponse(responseCode = "500", description = "Error inesperado del servidor")
-    })
+    @APIResponse(responseCode = "204", description = "Usuario eliminado")
+    @APIResponse(responseCode = "400", description = "Operación no permitida (p.ej. auto-eliminación)")
+    @APIResponse(responseCode = "404", description = "Usuario no encontrado")
+    @APIResponse(responseCode = "500", description = "Error inesperado del servidor")
     public Response deleteUser(
             @Parameter(description = "ID del usuario", required = true, example = "1")
             @PathParam("id") @Positive Long id) {
@@ -206,13 +199,13 @@ public class UserResource {
                     .entity("Usuario no encontrado")
                     .build();
         } catch (IllegalArgumentException e) {
-            log.warning("Invalid argument deleting user " + id + ": " + e.getMessage());
+            log.log(java.util.logging.Level.WARNING, "Invalid argument deleting user: {0}", e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("Operación no permitida")
                     .build();
         } catch (Exception e) {
-            log.severe("Unexpected error deleting user " + id + ": " + e.getMessage());
-            return Response.serverError().entity("Error inesperado").build();
+            log.log(java.util.logging.Level.SEVERE, "Unexpected error deleting user: {0}", e.getMessage());
+            return Response.serverError().entity(ERROR_INESPERADO).build();
         }
     }
 
@@ -220,12 +213,10 @@ public class UserResource {
     @Path("/{id}/activate")
     @Operation(summary = "Activar usuario",
         description = "Cambia el estado del usuario a ACTIVE. Página: Admin Panel > pestaña Usuarios. **Roles:** ADMIN")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Usuario activado"),
-        @APIResponse(responseCode = "404", description = "Usuario no encontrado"),
-        @APIResponse(responseCode = "409", description = "El usuario ya está activo"),
-        @APIResponse(responseCode = "500", description = "Error inesperado del servidor")
-    })
+    @APIResponse(responseCode = "200", description = "Usuario activado")
+    @APIResponse(responseCode = "404", description = "Usuario no encontrado")
+    @APIResponse(responseCode = "409", description = "El usuario ya está activo")
+    @APIResponse(responseCode = "500", description = "Error inesperado del servidor")
     public Response activateUser(
             @Parameter(description = "ID del usuario", required = true, example = "1")
             @PathParam("id") @Positive Long id) {
@@ -240,8 +231,8 @@ public class UserResource {
                     .entity("El usuario ya está activo")
                     .build();
         } catch (Exception e) {
-            log.severe("Unexpected error activating user " + id + ": " + e.getMessage());
-            return Response.serverError().entity("Error inesperado").build();
+            log.log(java.util.logging.Level.SEVERE, "Unexpected error activating user: {0}", e.getMessage());
+            return Response.serverError().entity(ERROR_INESPERADO).build();
         }
     }
 
@@ -249,13 +240,11 @@ public class UserResource {
     @Path("/{id}/suspend")
     @Operation(summary = "Suspender usuario",
         description = "Cambia el estado del usuario a SUSPENDED. Página: Admin Panel > pestaña Usuarios. **Roles:** ADMIN")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Usuario suspendido"),
-        @APIResponse(responseCode = "400", description = "Operación no permitida"),
-        @APIResponse(responseCode = "404", description = "Usuario no encontrado"),
-        @APIResponse(responseCode = "409", description = "El usuario ya está suspendido"),
-        @APIResponse(responseCode = "500", description = "Error inesperado del servidor")
-    })
+    @APIResponse(responseCode = "200", description = "Usuario suspendido")
+    @APIResponse(responseCode = "400", description = "Operación no permitida")
+    @APIResponse(responseCode = "404", description = "Usuario no encontrado")
+    @APIResponse(responseCode = "409", description = "El usuario ya está suspendido")
+    @APIResponse(responseCode = "500", description = "Error inesperado del servidor")
     public Response suspendUser(
             @Parameter(description = "ID del usuario", required = true, example = "1")
             @PathParam("id") @Positive Long id) {
@@ -270,13 +259,13 @@ public class UserResource {
                     .entity("El usuario ya está suspendido")
                     .build();
         } catch (IllegalArgumentException e) {
-            log.warning("Invalid argument suspending user " + id + ": " + e.getMessage());
+            log.log(java.util.logging.Level.WARNING, "Invalid argument suspending user: {0}", e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("Operación no permitida")
                     .build();
         } catch (Exception e) {
-            log.severe("Unexpected error suspending user " + id + ": " + e.getMessage());
-            return Response.serverError().entity("Error inesperado").build();
+            log.log(java.util.logging.Level.SEVERE, "Unexpected error suspending user: {0}", e.getMessage());
+            return Response.serverError().entity(ERROR_INESPERADO).build();
         }
     }
 
@@ -284,12 +273,10 @@ public class UserResource {
     @Path("/{id}/reset-password")
     @Operation(summary = "Restablecer contraseña",
         description = "Permite al ADMIN establecer una nueva contraseña para cualquier usuario sin requerir la contraseña actual. Página: Admin Panel > pestaña Usuarios. **Roles:** ADMIN")
-    @APIResponses({
-        @APIResponse(responseCode = "204", description = "Contraseña restablecida correctamente"),
-        @APIResponse(responseCode = "400", description = "Contraseña inválida"),
-        @APIResponse(responseCode = "404", description = "Usuario no encontrado"),
-        @APIResponse(responseCode = "500", description = "Error inesperado del servidor")
-    })
+    @APIResponse(responseCode = "204", description = "Contraseña restablecida correctamente")
+    @APIResponse(responseCode = "400", description = "Contraseña inválida")
+    @APIResponse(responseCode = "404", description = "Usuario no encontrado")
+    @APIResponse(responseCode = "500", description = "Error inesperado del servidor")
     @RequestBody(description = "Nueva contraseña", required = true,
         content = @Content(schema = @Schema(implementation = ResetPasswordDto.class)))
     public Response resetPassword(
@@ -304,8 +291,8 @@ public class UserResource {
                     .entity("Usuario no encontrado")
                     .build();
         } catch (Exception e) {
-            log.severe("Unexpected error resetting password for user " + id + ": " + e.getMessage());
-            return Response.serverError().entity("Error inesperado").build();
+            log.log(java.util.logging.Level.SEVERE, "Unexpected error resetting password: {0}", e.getMessage());
+            return Response.serverError().entity(ERROR_INESPERADO).build();
         }
     }
 }

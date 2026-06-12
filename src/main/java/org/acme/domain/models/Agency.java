@@ -9,7 +9,9 @@ public class Agency {
     private String agencyLang;
     private String agencyColor;
 
-    public Agency() {}
+    public Agency() {
+        // intentionally empty
+    }
 
     public String getAgencyId() { return agencyId; }
     public void setAgencyId(String agencyId) { this.agencyId = agencyId; }

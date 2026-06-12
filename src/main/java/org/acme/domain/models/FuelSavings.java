@@ -15,7 +15,9 @@ public class FuelSavings {
     private double electricCostPerYear;
     private int projectionYears;
 
-    public FuelSavings() {}
+    public FuelSavings() {
+        // intentionally empty
+    }
 
     public String getRouteId() { return routeId; }
     public void setRouteId(String routeId) { this.routeId = routeId; }

@@ -25,7 +25,9 @@ public class AgencyEntity {
     @Column(name = "agency_color", length = 10)
     private String agencyColor;
 
-    public AgencyEntity() {}
+    public AgencyEntity() {
+        // intentionally empty
+    }
 
     public String getAgencyId() { return agencyId; }
     public void setAgencyId(String agencyId) { this.agencyId = agencyId; }

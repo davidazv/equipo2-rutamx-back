@@ -17,7 +17,6 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.util.logging.Logger;
@@ -49,10 +48,8 @@ public class BusModelResource {
     @Path("/{id}")
     @Operation(summary = "Obtener modelo de bus por ID",
         description = "Página: Admin Panel > Catálogo de Buses. **Roles:** ADMIN, CEO, COO, CMO")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Modelo encontrado"),
-        @APIResponse(responseCode = "404", description = "Modelo no encontrado")
-    })
+    @APIResponse(responseCode = "200", description = "Modelo encontrado")
+    @APIResponse(responseCode = "404", description = "Modelo no encontrado")
     public Response getBusModel(
             @Parameter(description = "ID del modelo de bus", required = true, example = "1")
             @PathParam("id") @Positive Long id) {
@@ -66,10 +63,8 @@ public class BusModelResource {
     @Transactional
     @Operation(summary = "Crear modelo de bus",
         description = "Registra un nuevo modelo en el catálogo. Página: Admin Panel > Catálogo de Buses. **Roles:** ADMIN")
-    @APIResponses({
-        @APIResponse(responseCode = "201", description = "Modelo creado exitosamente"),
-        @APIResponse(responseCode = "409", description = "Ya existe un modelo con ese nombre")
-    })
+    @APIResponse(responseCode = "201", description = "Modelo creado exitosamente")
+    @APIResponse(responseCode = "409", description = "Ya existe un modelo con ese nombre")
     @RequestBody(description = "Datos del modelo de bus", required = true,
         content = @Content(schema = @Schema(implementation = BusModel.class)))
     public Response createBusModel(@Valid BusModel model) {
@@ -87,11 +82,9 @@ public class BusModelResource {
     @Transactional
     @Operation(summary = "Actualizar modelo de bus",
         description = "Página: Admin Panel > Catálogo de Buses. **Roles:** ADMIN")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Modelo actualizado"),
-        @APIResponse(responseCode = "404", description = "Modelo no encontrado"),
-        @APIResponse(responseCode = "409", description = "Conflicto de nombre duplicado")
-    })
+    @APIResponse(responseCode = "200", description = "Modelo actualizado")
+    @APIResponse(responseCode = "404", description = "Modelo no encontrado")
+    @APIResponse(responseCode = "409", description = "Conflicto de nombre duplicado")
     @RequestBody(description = "Datos actualizados del modelo", required = true,
         content = @Content(schema = @Schema(implementation = BusModel.class)))
     public Response updateBusModel(
@@ -115,10 +108,8 @@ public class BusModelResource {
     @Transactional
     @Operation(summary = "Eliminar modelo de bus",
         description = "Página: Admin Panel > Catálogo de Buses. **Roles:** ADMIN")
-    @APIResponses({
-        @APIResponse(responseCode = "204", description = "Modelo eliminado"),
-        @APIResponse(responseCode = "404", description = "Modelo no encontrado")
-    })
+    @APIResponse(responseCode = "204", description = "Modelo eliminado")
+    @APIResponse(responseCode = "404", description = "Modelo no encontrado")
     public Response deleteBusModel(
             @Parameter(description = "ID del modelo de bus", required = true, example = "1")
             @PathParam("id") @Positive Long id) {

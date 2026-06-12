@@ -182,8 +182,12 @@ public class RouteRepositoryImpl implements RouteRepository {
             "WHERE r.route_id = ?1 " +
             "GROUP BY r.route_id, r.agency_id, r.route_short_name, r.route_long_name, r.route_type";
 
+    private final EntityManager entityManager;
+
     @Inject
-    EntityManager entityManager;
+    public RouteRepositoryImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     public List<Route> findAllWithDistance() {
@@ -224,8 +228,8 @@ public class RouteRepositoryImpl implements RouteRepository {
             r.setAgencyId((String) row[1]);
             r.setRouteShortName((String) row[2]);
             r.setRouteLongName((String) row[3]);
-            r.setDistanceKm(row[4] instanceof BigDecimal
-                    ? ((BigDecimal) row[4]).doubleValue()
+            r.setDistanceKm(row[4] instanceof BigDecimal bd
+                    ? bd.doubleValue()
                     : ((Number) row[4]).doubleValue());
             r.setScheduledTimeMinutes(((Number) row[5]).intValue());
             r.setFrequencyMinutes(((Number) row[6]).intValue());
@@ -260,11 +264,11 @@ public class RouteRepositoryImpl implements RouteRepository {
                 return g;
             });
 
-            double lon = row[6] instanceof BigDecimal ? ((BigDecimal) row[6]).doubleValue() : ((Number) row[6]).doubleValue();
-            double lat = row[7] instanceof BigDecimal ? ((BigDecimal) row[7]).doubleValue() : ((Number) row[7]).doubleValue();
+            double lon = row[6] instanceof BigDecimal bd6 ? bd6.doubleValue() : ((Number) row[6]).doubleValue();
+            double lat = row[7] instanceof BigDecimal bd7 ? bd7.doubleValue() : ((Number) row[7]).doubleValue();
             rg.getCoordinates().add(new double[]{lon, lat});
 
-            double dist = row[8] instanceof BigDecimal ? ((BigDecimal) row[8]).doubleValue() : ((Number) row[8]).doubleValue();
+            double dist = row[8] instanceof BigDecimal bd8 ? bd8.doubleValue() : ((Number) row[8]).doubleValue();
             if (dist > rg.getDistanceKm()) {
                 rg.setDistanceKm(dist);
             }
@@ -298,8 +302,8 @@ public class RouteRepositoryImpl implements RouteRepository {
             r.setAgencyId((String) row[1]);
             r.setRouteShortName((String) row[2]);
             r.setRouteLongName((String) row[3]);
-            r.setDistanceKm(row[4] instanceof BigDecimal
-                    ? ((BigDecimal) row[4]).doubleValue()
+            r.setDistanceKm(row[4] instanceof BigDecimal bd
+                    ? bd.doubleValue()
                     : ((Number) row[4]).doubleValue());
             r.setScheduledTimeMinutes(((Number) row[5]).intValue());
             r.setFrequencyMinutes(((Number) row[6]).intValue());
@@ -314,8 +318,8 @@ public class RouteRepositoryImpl implements RouteRepository {
         String shortName = (String) row[2];
         String longName = (String) row[3];
         Integer routeType = ((Number) row[4]).intValue();
-        Double distanceKm = row[5] instanceof BigDecimal
-                ? ((BigDecimal) row[5]).doubleValue()
+        Double distanceKm = row[5] instanceof BigDecimal bd
+                ? bd.doubleValue()
                 : ((Number) row[5]).doubleValue();
 
         return RouteMapper.toDomain(routeId, agencyId, shortName, longName, routeType, distanceKm);

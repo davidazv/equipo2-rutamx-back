@@ -15,7 +15,9 @@ public class CmoDashboardRouteRow {
     private double co2DieselTonAnio;
     private double co2ElectricTonAnio;
 
-    public CmoDashboardRouteRow() {}
+    public CmoDashboardRouteRow() {
+        // intentionally empty
+    }
 
     public String getRouteId() { return routeId; }
     public void setRouteId(String routeId) { this.routeId = routeId; }

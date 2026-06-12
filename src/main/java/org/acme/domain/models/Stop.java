@@ -12,6 +12,7 @@ public class Stop {
     private Byte wheelchairBoarding;
 
     public Stop() {
+        // intentionally empty
     }
 
     public String getStopId() {

@@ -13,7 +13,9 @@ public class BusModelRank {
     private int requiredCapacity;
     private String justification;
 
-    public BusModelRank() {}
+    public BusModelRank() {
+        // intentionally empty
+    }
 
     public int getRank() { return rank; }
     public void setRank(int rank) { this.rank = rank; }

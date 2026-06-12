@@ -26,7 +26,7 @@ public class CreateUserUseCase {
     }
 
     public User execute(CreateUserDto dto) {
-        log.info("Creating user with email: " + dto.getEmail());
+        log.log(java.util.logging.Level.INFO, "Creating user");
 
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new DuplicateEmailException("El correo ya está registrado");
@@ -36,12 +36,11 @@ public class CreateUserUseCase {
         try {
             firebaseUuid = firebaseUserCreator.create(dto.getEmail(), dto.getPassword());
         } catch (Exception e) {
-            log.severe("Firebase error creating user '" + dto.getEmail() + "': " + e.getMessage() +
-                    (e.getCause() != null ? " | cause: " + e.getCause().getMessage() : ""));
+            log.log(java.util.logging.Level.SEVERE, "Firebase error creating user: {0}", e.getMessage());
             if (e.getMessage() != null && e.getMessage().contains("EMAIL_ALREADY_EXISTS")) {
                 throw new DuplicateEmailException("El correo ya está registrado");
             }
-            throw new RuntimeException("Error al crear usuario en Firebase", e);
+            throw new IllegalStateException("Error al crear usuario en Firebase", e);
         }
 
         User user = new User();

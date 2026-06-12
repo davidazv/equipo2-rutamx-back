@@ -8,7 +8,6 @@ import org.acme.application.usecase.GetCooDashboardUseCase;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.time.LocalDate;
@@ -34,11 +33,9 @@ public class CooResource {
     @Path("/dashboard")
     @Operation(summary = "Dashboard consolidado del COO",
         description = "Una sola llamada que regresa contadores operativos, tendencia de pasajeros por día de semana, viajes por hora y catálogo de agencias. Implementado vía sp_get_coo_dashboard. Página: /coo/dashboard. **Roles:** ADMIN, COO")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Dashboard COO consolidado"),
-        @APIResponse(responseCode = "400", description = "Formato de fecha inválido (ISO YYYY-MM-DD)"),
-        @APIResponse(responseCode = "500", description = "Error inesperado")
-    })
+    @APIResponse(responseCode = "200", description = "Dashboard COO consolidado")
+    @APIResponse(responseCode = "400", description = "Formato de fecha inválido (ISO YYYY-MM-DD)")
+    @APIResponse(responseCode = "500", description = "Error inesperado")
     public Response getDashboard(
             @Parameter(description = "Fecha inicio (YYYY-MM-DD). Opcional.") @QueryParam("start") String startStr,
             @Parameter(description = "Fecha fin (YYYY-MM-DD). Opcional.")    @QueryParam("end")   String endStr) {

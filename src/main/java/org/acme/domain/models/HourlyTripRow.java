@@ -5,7 +5,9 @@ public class HourlyTripRow {
     private int hour;
     private long tripCount;
 
-    public HourlyTripRow() {}
+    public HourlyTripRow() {
+        // intentionally empty
+    }
 
     public HourlyTripRow(int hour, long tripCount) {
         this.hour = hour;

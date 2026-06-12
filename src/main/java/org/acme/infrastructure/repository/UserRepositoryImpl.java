@@ -12,15 +12,19 @@ import org.acme.infrastructure.entities.UserEntity;
 import org.acme.infrastructure.mapper.UserMapper;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class UserRepositoryImpl implements UserRepository {
 
+    private final EntityManager entityManager;
+
     @Inject
-    EntityManager entityManager;
+    public UserRepositoryImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     @Transactional
@@ -28,8 +32,8 @@ public class UserRepositoryImpl implements UserRepository {
         UserEntity entity = UserMapper.toEntity(user);
         RoleEntity role = entityManager.find(RoleEntity.class, user.getRoleId());
         entity.setRole(role);
-        entity.setCreatedAt(LocalDateTime.now());
-        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        entity.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
         entityManager.persist(entity);
         return UserMapper.toDomain(entity);
     }
@@ -65,7 +69,7 @@ public class UserRepositoryImpl implements UserRepository {
                 .getResultList()
                 .stream()
                 .map(UserMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -86,7 +90,7 @@ public class UserRepositoryImpl implements UserRepository {
                 .getResultList()
                 .stream()
                 .map(UserMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
 
         return new PagedResult<>(items, total, safePage, safeSize);
     }
@@ -113,7 +117,7 @@ public class UserRepositoryImpl implements UserRepository {
             entity.setRole(role);
         }
         if (user.getStatus() != null) entity.setStatus(user.getStatus());
-        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
 
         return UserMapper.toDomain(entity);
     }

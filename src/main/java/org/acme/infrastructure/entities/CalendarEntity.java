@@ -38,7 +38,9 @@ public class CalendarEntity {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    public CalendarEntity() {}
+    public CalendarEntity() {
+        // intentionally empty
+    }
 
     public String getServiceId() { return serviceId; }
     public void setServiceId(String serviceId) { this.serviceId = serviceId; }

@@ -56,9 +56,8 @@ public class CalculateFuelSavingsUseCase {
         double fuelSavingsLiters = FleetCalculator.dieselLitersPerYear(
                 numberOfBuses, kmPerYear, dieselBaseline.getFuelConsumptionLKm().doubleValue());
 
-        log.info("Fuel savings para ruta=" + routeId + " modelo=" + busModelId
-                + " buses=" + numberOfBuses + ": $" + String.format("%.0f", fuelSavingsMXN)
-                + " MXN, " + String.format("%.0f", fuelSavingsLiters) + " litros/año");
+        log.log(java.util.logging.Level.INFO, "Fuel savings calculado: buses={0}, ahorro=${1} MXN, {2} litros/anio",
+                new Object[]{numberOfBuses, String.format("%.0f", fuelSavingsMXN), String.format("%.0f", fuelSavingsLiters)});
 
         FuelSavings savings = new FuelSavings();
         savings.setRouteId(routeId);

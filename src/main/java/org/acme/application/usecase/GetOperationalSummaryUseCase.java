@@ -8,7 +8,6 @@ import org.acme.domain.repository.AfluenciaMetrobusRepository;
 import org.acme.domain.repository.FrequencyRepository;
 import org.acme.domain.repository.RouteRepository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;

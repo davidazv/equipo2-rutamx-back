@@ -8,6 +8,8 @@ import java.util.Set;
 @ApplicationScoped
 public class RouteColorAssigner {
 
+    private static final Random RANDOM = new Random();
+
     private static final String[] COLOR_PALETTE = {
         "D40D0D", "141982", "7A9A01", "8D1A96", "FF9A03",
         "F9D616", "0071C1", "D81E05", "A02D96", "F94F8E",
@@ -27,12 +29,11 @@ public class RouteColorAssigner {
     }
 
     private String generateRandomColor(Set<String> usedColors) {
-        Random random = new Random();
         for (int attempt = 0; attempt < 100; attempt++) {
             String color = String.format("%02X%02X%02X",
-                    random.nextInt(200) + 30,
-                    random.nextInt(200) + 30,
-                    random.nextInt(200) + 30);
+                    RANDOM.nextInt(200) + 30,
+                    RANDOM.nextInt(200) + 30,
+                    RANDOM.nextInt(200) + 30);
             if (!usedColors.contains(color.toUpperCase())) {
                 return color;
             }

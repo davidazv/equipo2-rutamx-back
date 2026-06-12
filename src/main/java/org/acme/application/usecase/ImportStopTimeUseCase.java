@@ -8,10 +8,7 @@ import org.acme.domain.models.StopTime;
 import org.acme.domain.repository.StopTimeRepository;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @ApplicationScoped
 public class ImportStopTimeUseCase {
@@ -37,11 +34,8 @@ public class ImportStopTimeUseCase {
 
         stopTimeRepository.deleteAll();
 
-        List<StopTime> deduped = new ArrayList<>();
-        Set<String> seen = new HashSet<>();
-        for (StopTime st : result.getItems()) {
-            if (seen.add(st.getTripId() + "|" + st.getStopSequence())) deduped.add(st);
-        }
+        List<StopTime> deduped = ImportSupport.dedupBy(result.getItems(),
+                st -> st.getTripId() + "|" + st.getStopSequence());
         int imported = stopTimeRepository.createAll(deduped);
         return new CsvImportResult("stop_times", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());

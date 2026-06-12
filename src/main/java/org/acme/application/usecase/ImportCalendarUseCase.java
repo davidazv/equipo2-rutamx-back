@@ -12,10 +12,7 @@ import org.acme.domain.repository.TripRepository;
 
 import java.io.InputStream;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
@@ -58,11 +55,7 @@ public class ImportCalendarUseCase {
         tripRepository.deleteAll();
         calendarRepository.deleteAll();
 
-        List<Calendar> deduped = new ArrayList<>();
-        Set<String> seen = new HashSet<>();
-        for (Calendar c : result.getItems()) {
-            if (seen.add(c.getServiceId())) deduped.add(c);
-        }
+        List<Calendar> deduped = ImportSupport.dedupBy(result.getItems(), Calendar::getServiceId);
         int imported = calendarRepository.createAll(deduped);
         return new CsvImportResult("calendar", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());

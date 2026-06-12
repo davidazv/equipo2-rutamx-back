@@ -12,10 +12,7 @@ import org.acme.domain.repository.StopTimeRepository;
 import org.acme.domain.repository.TripRepository;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @ApplicationScoped
 public class ImportAgencyUseCase {
@@ -57,11 +54,7 @@ public class ImportAgencyUseCase {
         routeRepository.deleteAll();
         agencyRepository.deleteAll();
 
-        List<Agency> deduped = new ArrayList<>();
-        Set<String> seen = new HashSet<>();
-        for (Agency a : result.getItems()) {
-            if (seen.add(a.getAgencyId())) deduped.add(a);
-        }
+        List<Agency> deduped = ImportSupport.dedupBy(result.getItems(), Agency::getAgencyId);
         int imported = agencyRepository.createAll(deduped);
         return new CsvImportResult("agency", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());

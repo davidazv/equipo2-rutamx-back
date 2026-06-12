@@ -35,9 +35,11 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) {
         String path = requestContext.getUriInfo().getPath();
+        String method = requestContext.getMethod();
 
         // Endpoints restricted to authenticated roles (CMO, CEO, COO, ADMIN)
-        boolean requiresRoleAuth = path.startsWith("/api/co2-savings")
+        boolean requiresRoleAuth = path.startsWith("/api/me")
+                || path.startsWith("/api/co2-savings")
                 || path.startsWith("/api/routes/trips-by-day")
                 || path.startsWith("/api/reports")
                 || path.startsWith("/api/cmo");
@@ -61,21 +63,25 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Skip auth for Quarkus internals and public API endpoints
-        if (path.startsWith("/q/")
-                || path.startsWith("/status")
-                || path.startsWith("/api/agencies")
+        // Public read-only endpoints (dashboards, catalog GETs).
+        // Mutations on /api/bus-models still require ADMIN auth (handled below).
+        boolean isPublicReadOnly = "GET".equalsIgnoreCase(method) && (
+                path.startsWith("/api/agencies")
                 || path.startsWith("/api/bus-models")
                 || path.startsWith("/api/routes")
                 || path.startsWith("/api/roi")
                 || path.startsWith("/api/kpi")
                 || path.startsWith("/api/energy-consumption")
-                || path.startsWith("/api/fuel-savings")
-                || (path.startsWith("/admin/users") && !path.startsWith("/admin/users/export"))
-                || path.startsWith("/admin/upload")) {
+                || path.startsWith("/api/fuel-savings"));
+
+        // Skip auth for Quarkus internals, health and public reads
+        if (path.startsWith("/q/")
+                || path.startsWith("/status")
+                || isPublicReadOnly) {
             return;
         }
 
+        // Everything else (all /admin/*, write methods on /api/*) requires ADMIN auth
         User user = authenticateRequest(requestContext);
         if (user == null) return;
 

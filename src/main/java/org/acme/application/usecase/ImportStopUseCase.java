@@ -10,10 +10,7 @@ import org.acme.domain.repository.StopTimeRepository;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @ApplicationScoped
 public class ImportStopUseCase {
@@ -43,11 +40,7 @@ public class ImportStopUseCase {
         stopTimeRepository.deleteAll();
         stopRepository.deleteAll();
 
-        List<Stop> deduped = new ArrayList<>();
-        Set<String> seen = new HashSet<>();
-        for (Stop s : result.getItems()) {
-            if (seen.add(s.getStopId())) deduped.add(s);
-        }
+        List<Stop> deduped = ImportSupport.dedupBy(result.getItems(), Stop::getStopId);
         int imported = stopRepository.createAll(deduped);
         return new CsvImportResult("stops", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());

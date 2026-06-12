@@ -4,6 +4,12 @@
 -- H2 alias for MySQL TIME_TO_SEC function (not natively supported by H2 2.x)
 CREATE ALIAS IF NOT EXISTS TIME_TO_SEC AS 'int timeToSec(String t) throws Exception { if (t == null) return 0; String[] p = t.split(":"); return Integer.parseInt(p[0]) * 3600 + Integer.parseInt(p[1]) * 60 + Integer.parseInt(p[2]); }';
 
+-- H2 aliases for MySQL spatial functions used in the ELSE branch of ROUTE_BY_ID_WITH_DISTANCE_QUERY.
+-- That branch is never executed in tests because all seed shapes have shape_dist_traveled > 0.
+-- Aliases are required so H2 can parse (not just execute) the native SQL query.
+CREATE ALIAS IF NOT EXISTS POINT AS 'byte[] mkPoint(double x, double y) { java.nio.ByteBuffer b = java.nio.ByteBuffer.allocate(21); b.order(java.nio.ByteOrder.LITTLE_ENDIAN); b.put((byte)1); b.putInt(1); b.putDouble(x); b.putDouble(y); return b.array(); }';
+CREATE ALIAS IF NOT EXISTS ST_DISTANCE_SPHERE AS 'double stDistanceSphere(byte[] p1, byte[] p2) { return 0.0; }';
+
 -- upload_metadata (H2 auto-creates from entity, but seed for tests)
 
 

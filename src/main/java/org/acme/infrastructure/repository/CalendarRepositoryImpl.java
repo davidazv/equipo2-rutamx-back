@@ -37,15 +37,6 @@ public class CalendarRepositoryImpl implements CalendarRepository {
     @Override
     @Transactional
     public int createAll(List<Calendar> items) {
-        int count = 0;
-        for (Calendar item : items) {
-            CalendarEntity entity = CalendarMapper.toEntity(item);
-            entityManager.persist(entity);
-            if (++count % 100 == 0) {
-                entityManager.flush();
-                entityManager.clear();
-            }
-        }
-        return count;
+        return BatchPersister.persistAll(entityManager, items, 100, CalendarMapper::toEntity);
     }
 }

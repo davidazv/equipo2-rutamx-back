@@ -9,10 +9,7 @@ import org.acme.domain.repository.ShapeRepository;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @ApplicationScoped
 public class ImportShapeUseCase {
@@ -38,11 +35,8 @@ public class ImportShapeUseCase {
 
         shapeRepository.deleteAll();
 
-        List<Shape> deduped = new ArrayList<>();
-        Set<String> seen = new HashSet<>();
-        for (Shape s : result.getItems()) {
-            if (seen.add(s.getShapeId() + "|" + s.getShapePtSequence())) deduped.add(s);
-        }
+        List<Shape> deduped = ImportSupport.dedupBy(result.getItems(),
+                s -> s.getShapeId() + "|" + s.getShapePtSequence());
         int imported = shapeRepository.createAll(deduped);
         return new CsvImportResult("shapes", result.getTotalRows(), imported,
                 result.getTotalRows() - imported, result.getErrors());

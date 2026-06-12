@@ -17,13 +17,15 @@ public class FirebaseConfig {
 
     private static final Logger log = Logger.getLogger(FirebaseConfig.class.getName());
 
+    private final String credentialsPath;
+
     @Inject
-    @ConfigProperty(name = "firebase.credentials")
-    String credentialsPath;
+    public FirebaseConfig(@ConfigProperty(name = "firebase.credentials") String credentialsPath) {
+        this.credentialsPath = credentialsPath;
+    }
 
     void onStart(@Observes StartupEvent ev) {
-        try {
-            FileInputStream serviceAccount = new FileInputStream(credentialsPath);
+        try (FileInputStream serviceAccount = new FileInputStream(credentialsPath)) {
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                     .build();

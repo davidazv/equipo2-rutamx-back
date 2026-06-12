@@ -7,7 +7,9 @@ public class HourlyFrequencyStats {
     private List<HourlyOccupancy> occupancyByHour;
     private List<HourlyBusDemand> busDemand;
 
-    public HourlyFrequencyStats() {}
+    public HourlyFrequencyStats() {
+        // intentionally empty
+    }
 
     public HourlyFrequencyStats(List<HourlyOccupancy> occupancyByHour, List<HourlyBusDemand> busDemand) {
         this.occupancyByHour = occupancyByHour;

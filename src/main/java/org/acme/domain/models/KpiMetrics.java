@@ -9,7 +9,9 @@ public class KpiMetrics {
     private double totalDieselCostMXN;
     private int routesAnalyzed;
 
-    public KpiMetrics() {}
+    public KpiMetrics() {
+        // intentionally empty
+    }
 
     public double getTotalFuelSavingsMXN() { return totalFuelSavingsMXN; }
     public void setTotalFuelSavingsMXN(double totalFuelSavingsMXN) { this.totalFuelSavingsMXN = totalFuelSavingsMXN; }

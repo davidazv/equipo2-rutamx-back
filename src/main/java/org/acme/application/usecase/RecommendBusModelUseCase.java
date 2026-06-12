@@ -59,8 +59,7 @@ public class RecommendBusModelUseCase {
     }
 
     public BusModelRecommendation execute(String routeId, double targetOccupancy) {
-        log.info("Generating bus model recommendation for route=" + routeId
-                + " targetOccupancy=" + targetOccupancy);
+        log.log(java.util.logging.Level.INFO, "Generating bus model recommendation: targetOccupancy={0}", targetOccupancy);
 
         // 1 — Fetch route with distance and frequency
         RouteTimeComparison route = routeRepository.findByIdWithTimeComparison(routeId)

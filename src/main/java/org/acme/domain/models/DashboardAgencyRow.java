@@ -5,7 +5,9 @@ public class DashboardAgencyRow {
     private String agencyId;
     private String agencyName;
 
-    public DashboardAgencyRow() {}
+    public DashboardAgencyRow() {
+        // intentionally empty
+    }
 
     public DashboardAgencyRow(String agencyId, String agencyName) {
         this.agencyId = agencyId;

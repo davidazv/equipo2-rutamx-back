@@ -9,7 +9,9 @@ public class CooDashboard {
     private List<HourlyTripRow> hourly;
     private List<DashboardAgencyRow> agencies;
 
-    public CooDashboard() {}
+    public CooDashboard() {
+        // intentionally empty
+    }
 
     public CooDashboard(OperationalCounters operational,
                         List<PassengerTrendRow> trend,

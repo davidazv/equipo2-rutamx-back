@@ -26,7 +26,9 @@ public class ShapeEntity {
     @Column(name = "shape_dist_traveled", precision = 10, scale = 4)
     private BigDecimal shapeDistTraveled;
 
-    public ShapeEntity() {}
+    public ShapeEntity() {
+        // intentionally empty
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

@@ -5,7 +5,9 @@ public class PassengerTrendRow {
     private int dow;
     private double avgPassengers;
 
-    public PassengerTrendRow() {}
+    public PassengerTrendRow() {
+        // intentionally empty
+    }
 
     public PassengerTrendRow(int dow, double avgPassengers) {
         this.dow = dow;

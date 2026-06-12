@@ -10,13 +10,16 @@ import org.acme.infrastructure.entities.ShapeEntity;
 import org.acme.infrastructure.mapper.ShapeMapper;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ShapeRepositoryImpl implements ShapeRepository {
 
+    private final EntityManager entityManager;
+
     @Inject
-    EntityManager entityManager;
+    public ShapeRepositoryImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     public List<Shape> findAll() {
@@ -25,7 +28,7 @@ public class ShapeRepositoryImpl implements ShapeRepository {
                 .getResultList()
                 .stream()
                 .map(ShapeMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

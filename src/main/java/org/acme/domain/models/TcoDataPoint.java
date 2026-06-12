@@ -6,7 +6,9 @@ public class TcoDataPoint {
     private double electricTCO;
     private double dieselTCO;
 
-    public TcoDataPoint() {}
+    public TcoDataPoint() {
+        // intentionally empty
+    }
 
     public TcoDataPoint(int year, double electricTCO, double dieselTCO) {
         this.year = year;

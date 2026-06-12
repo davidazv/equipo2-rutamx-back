@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.Month;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -122,8 +123,8 @@ class BusModelMapperTest {
         entity.setFuelConsumptionLKm(null);
         entity.setMaintenanceCostPerKm(new BigDecimal("0.1200"));
         entity.setCo2EmissionsGKm(new BigDecimal("0.00"));
-        entity.setCreatedAt(LocalDateTime.of(2024, 1, 1, 0, 0));
-        entity.setUpdatedAt(LocalDateTime.of(2024, 1, 1, 0, 0));
+        entity.setCreatedAt(LocalDateTime.of(2024, Month.JANUARY, 1, 0, 0));
+        entity.setUpdatedAt(LocalDateTime.of(2024, Month.JANUARY, 1, 0, 0));
         return entity;
     }
 

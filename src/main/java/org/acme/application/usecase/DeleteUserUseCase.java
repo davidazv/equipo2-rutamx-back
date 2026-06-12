@@ -31,7 +31,7 @@ public class DeleteUserUseCase {
     }
 
     public void execute(Long id) {
-        log.info("Deleting user id: " + id);
+        log.log(java.util.logging.Level.INFO, "Deleting user id: {0}", id);
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
@@ -45,10 +45,10 @@ public class DeleteUserUseCase {
             firebaseUserCreator.deleteUser(user.getFirebaseUuid());
         } catch (FirebaseAuthException e) {
             if (AuthErrorCode.USER_NOT_FOUND.equals(e.getAuthErrorCode())) {
-                log.warning("User not found in Firebase, proceeding to delete from DB: " + user.getFirebaseUuid());
+                log.log(java.util.logging.Level.WARNING, "User not found in Firebase, proceeding to delete from DB");
             } else {
-                log.warning("Error deleting user from Firebase: " + e.getMessage());
-                throw new RuntimeException("Error al eliminar usuario en Firebase", e);
+                log.log(java.util.logging.Level.WARNING, "Error deleting user from Firebase: {0}", e.getMessage());
+                throw new IllegalStateException("Error al eliminar usuario en Firebase", e);
             }
         }
 

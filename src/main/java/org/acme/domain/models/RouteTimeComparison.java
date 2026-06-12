@@ -31,7 +31,9 @@ public class RouteTimeComparison {
     /** Minimum headway in minutes derived from GTFS frequencies.headway_secs. 0 if no data. */
     private int frequencyMinutes;
 
-    public RouteTimeComparison() {}
+    public RouteTimeComparison() {
+        // intentionally empty
+    }
 
     public String getRouteId() { return routeId; }
     public void setRouteId(String routeId) { this.routeId = routeId; }

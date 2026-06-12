@@ -62,7 +62,9 @@ public class BusModel {
     @DecimalMin(value = "0.0", inclusive = true)
     private BigDecimal co2EmissionsGKm;
 
-    public BusModel() {}
+    public BusModel() {
+        // intentionally empty
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

@@ -9,7 +9,6 @@ import org.acme.application.usecase.GetCmoRouteStatsUseCase;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.util.logging.Logger;
@@ -37,10 +36,8 @@ public class CmoResource {
     @Deprecated
     @Operation(summary = "Estadísticas por ruta para CMO (deprecated)",
         description = "Sustituido por /api/cmo/dashboard que regresa rutas + agencias en una sola llamada. **Roles:** ADMIN, CMO")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Estadísticas por ruta"),
-        @APIResponse(responseCode = "500", description = "Error inesperado")
-    })
+    @APIResponse(responseCode = "200", description = "Estadísticas por ruta")
+    @APIResponse(responseCode = "500", description = "Error inesperado")
     public Response getRouteStats() {
         try {
             return Response.ok(getCmoRouteStatsUseCase.execute()).build();
@@ -56,10 +53,8 @@ public class CmoResource {
     @Path("/dashboard")
     @Operation(summary = "Dashboard consolidado del CMO",
         description = "Una sola llamada que regresa rutas con métricas (distancia, viajes/día, headway, CO₂ diesel y eléctrico) más agencias con sus IDs. Implementado vía sp_get_cmo_dashboard. Página: /cmo/dashboard. **Roles:** ADMIN, CMO")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Dashboard CMO consolidado"),
-        @APIResponse(responseCode = "500", description = "Error inesperado")
-    })
+    @APIResponse(responseCode = "200", description = "Dashboard CMO consolidado")
+    @APIResponse(responseCode = "500", description = "Error inesperado")
     public Response getDashboard(
             @Parameter(description = "Filtro opcional por agency_id") @QueryParam("agencyId") String agencyId) {
         try {

@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ab -n 5 -c 1 \"http://127.0.0.1:8080/q/dev\")"
+    ]
+  }
+}

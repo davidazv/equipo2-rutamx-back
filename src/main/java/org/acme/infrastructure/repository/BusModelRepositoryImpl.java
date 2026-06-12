@@ -12,15 +12,19 @@ import org.acme.infrastructure.entities.BusModelEntity;
 import org.acme.infrastructure.mapper.BusModelMapper;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class BusModelRepositoryImpl implements BusModelRepository {
 
+    private final EntityManager entityManager;
+
     @Inject
-    EntityManager entityManager;
+    public BusModelRepositoryImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     public List<BusModel> findAll() {
@@ -29,7 +33,7 @@ public class BusModelRepositoryImpl implements BusModelRepository {
                 .getResultList()
                 .stream()
                 .map(BusModelMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -47,15 +51,15 @@ public class BusModelRepositoryImpl implements BusModelRepository {
                 .getResultList()
                 .stream()
                 .map(BusModelMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     @Transactional
     public BusModel create(BusModel model) {
         BusModelEntity entity = BusModelMapper.toEntity(model);
-        entity.setCreatedAt(LocalDateTime.now());
-        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        entity.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
         entityManager.persist(entity);
         entityManager.flush();
         return BusModelMapper.toDomain(entity);
@@ -78,7 +82,7 @@ public class BusModelRepositoryImpl implements BusModelRepository {
         entity.setFuelConsumptionLKm(model.getFuelConsumptionLKm());
         entity.setMaintenanceCostPerKm(model.getMaintenanceCostPerKm());
         entity.setCo2EmissionsGKm(model.getCo2EmissionsGKm());
-        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
 
         return BusModelMapper.toDomain(entity);
     }
@@ -102,8 +106,8 @@ public class BusModelRepositoryImpl implements BusModelRepository {
     public int createAll(List<BusModel> items) {
         return BatchPersister.persistAll(entityManager, items, 50, item -> {
             BusModelEntity entity = BusModelMapper.toEntity(item);
-            entity.setCreatedAt(LocalDateTime.now());
-            entity.setUpdatedAt(LocalDateTime.now());
+            entity.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
+            entity.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
             return entity;
         });
     }

@@ -7,7 +7,9 @@ public class CmoDashboard {
     private List<CmoDashboardRouteRow> routes;
     private List<DashboardAgencyRow> agencies;
 
-    public CmoDashboard() {}
+    public CmoDashboard() {
+        // intentionally empty
+    }
 
     public CmoDashboard(List<CmoDashboardRouteRow> routes, List<DashboardAgencyRow> agencies) {
         this.routes = routes;

@@ -10,7 +10,9 @@ public class RoiEstimate {
     private double electricCostPerYear;
     private double dieselCostPerYear;
 
-    public RoiEstimate() {}
+    public RoiEstimate() {
+        // intentionally empty
+    }
 
     public double getRoiPercent() { return roiPercent; }
     public void setRoiPercent(double roiPercent) { this.roiPercent = roiPercent; }

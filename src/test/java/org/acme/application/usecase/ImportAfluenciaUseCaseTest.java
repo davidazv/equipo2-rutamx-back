@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.Collections;
 import java.util.List;
 
@@ -47,7 +48,7 @@ class ImportAfluenciaUseCaseTest {
     void executeShouldReturnCorrectImportResult() {
         AfluenciaMetrobus a1 = buildAfluencia();
         AfluenciaMetrobus a2 = buildAfluencia();
-        a2.setFecha(LocalDate.of(2026, 3, 16));
+        a2.setFecha(LocalDate.of(2026, Month.MARCH, 16));
         List<AfluenciaMetrobus> items = List.of(a1, a2);
         stubParser(items, 3, List.of("Fila 3: bad date"));
         when(afluenciaRepository.createAll(items)).thenReturn(2);
@@ -110,7 +111,7 @@ class ImportAfluenciaUseCaseTest {
         ArgumentCaptor<List<AfluenciaMetrobus>> captor = ArgumentCaptor.forClass(List.class);
         verify(afluenciaRepository).createAll(captor.capture());
         AfluenciaMetrobus a = captor.getValue().get(0);
-        assertEquals(LocalDate.of(2026, 3, 15), a.getFecha());
+        assertEquals(LocalDate.of(2026, Month.MARCH, 15), a.getFecha());
         assertEquals("Marzo", a.getMes());
         assertEquals(2026, a.getAnio());
         assertEquals("linea 1", a.getLinea());
@@ -120,7 +121,7 @@ class ImportAfluenciaUseCaseTest {
 
     private AfluenciaMetrobus buildAfluencia() {
         AfluenciaMetrobus a = new AfluenciaMetrobus();
-        a.setFecha(LocalDate.of(2026, 3, 15));
+        a.setFecha(LocalDate.of(2026, Month.MARCH, 15));
         a.setMes("Marzo");
         a.setAnio((short) 2026);
         a.setLinea("Linea 1");

@@ -30,7 +30,9 @@ public class TripEntity {
     @Column(name = "direction_id")
     private Byte directionId;
 
-    public TripEntity() {}
+    public TripEntity() {
+        // intentionally empty
+    }
 
     public String getTripId() { return tripId; }
     public void setTripId(String tripId) { this.tripId = tripId; }

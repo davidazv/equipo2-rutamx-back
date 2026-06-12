@@ -29,7 +29,9 @@ public class RouteEntity {
     @Column(name = "route_text_color", length = 10)
     private String routeTextColor;
 
-    public RouteEntity() {}
+    public RouteEntity() {
+        // intentionally empty
+    }
 
     public String getRouteId() { return routeId; }
     public void setRouteId(String routeId) { this.routeId = routeId; }

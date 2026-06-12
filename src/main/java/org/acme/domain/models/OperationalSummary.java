@@ -6,7 +6,9 @@ public class OperationalSummary {
     private double avgDailyPassengers;
     private String peakHour;
 
-    public OperationalSummary() {}
+    public OperationalSummary() {
+        // intentionally empty
+    }
 
     public int getTotalRoutes() { return totalRoutes; }
     public void setTotalRoutes(int totalRoutes) { this.totalRoutes = totalRoutes; }

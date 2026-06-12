@@ -23,28 +23,25 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
 
     private static final Logger log = Logger.getLogger(FirebaseAuthFilter.class.getName());
 
-    @Inject
-    FirebaseUserCreator firebaseUserCreator;
+    private final FirebaseUserCreator firebaseUserCreator;
+    private final UserRepository userRepository;
+    private final AuthContext authContext;
 
     @Inject
-    UserRepository userRepository;
-
-    @Inject
-    AuthContext authContext;
+    public FirebaseAuthFilter(FirebaseUserCreator firebaseUserCreator,
+                              UserRepository userRepository,
+                              AuthContext authContext) {
+        this.firebaseUserCreator = firebaseUserCreator;
+        this.userRepository = userRepository;
+        this.authContext = authContext;
+    }
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
         String path = requestContext.getUriInfo().getPath();
         String method = requestContext.getMethod();
 
-        // Endpoints restricted to authenticated roles (CMO, CEO, COO, ADMIN)
-        boolean requiresRoleAuth = path.startsWith("/api/me")
-                || path.startsWith("/api/co2-savings")
-                || path.startsWith("/api/routes/trips-by-day")
-                || path.startsWith("/api/reports")
-                || path.startsWith("/api/cmo");
-
-        if (requiresRoleAuth) {
+        if (requiresRoleAuth(path)) {
             User user = authenticateRequest(requestContext);
             if (user == null) return;
 
@@ -63,21 +60,10 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Public read-only endpoints (dashboards, catalog GETs).
-        // Mutations on /api/bus-models still require ADMIN auth (handled below).
-        boolean isPublicReadOnly = "GET".equalsIgnoreCase(method) && (
-                path.startsWith("/api/agencies")
-                || path.startsWith("/api/bus-models")
-                || path.startsWith("/api/routes")
-                || path.startsWith("/api/roi")
-                || path.startsWith("/api/kpi")
-                || path.startsWith("/api/energy-consumption")
-                || path.startsWith("/api/fuel-savings"));
-
         // Skip auth for Quarkus internals, health and public reads
         if (path.startsWith("/q/")
                 || path.startsWith("/status")
-                || isPublicReadOnly) {
+                || isPublicReadOnly(path, method)) {
             return;
         }
 
@@ -96,6 +82,28 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
         authContext.setUser(user);
     }
 
+    private static boolean requiresRoleAuth(String path) {
+        // Endpoints restricted to authenticated roles (CMO, CEO, COO, ADMIN)
+        return path.startsWith("/api/me")
+                || path.startsWith("/api/co2-savings")
+                || path.startsWith("/api/routes/trips-by-day")
+                || path.startsWith("/api/reports")
+                || path.startsWith("/api/cmo");
+    }
+
+    private static boolean isPublicReadOnly(String path, String method) {
+        // Public read-only endpoints (dashboards, catalog GETs).
+        // Mutations on /api/bus-models still require ADMIN auth (handled below).
+        return "GET".equalsIgnoreCase(method) && (
+                path.startsWith("/api/agencies")
+                || path.startsWith("/api/bus-models")
+                || path.startsWith("/api/routes")
+                || path.startsWith("/api/roi")
+                || path.startsWith("/api/kpi")
+                || path.startsWith("/api/energy-consumption")
+                || path.startsWith("/api/fuel-savings"));
+    }
+
     private User authenticateRequest(ContainerRequestContext requestContext) {
         String authHeader = requestContext.getHeaderString("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -111,7 +119,7 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
         try {
             firebaseToken = firebaseUserCreator.verifyIdTokenFull(token);
         } catch (Exception e) {
-            log.warning("Invalid Firebase token: " + e.getMessage());
+            log.log(java.util.logging.Level.WARNING, "Invalid Firebase token: {0}", e.getMessage());
             requestContext.abortWith(
                     Response.status(Response.Status.UNAUTHORIZED)
                             .entity("Token inválido o expirado")
@@ -130,7 +138,7 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
             if (email != null) {
                 user = userRepository.findByEmail(email).orElse(null);
                 if (user != null) {
-                    log.info("Auto-repairing firebase_uuid for user: " + email);
+                    log.log(java.util.logging.Level.INFO, "Auto-repairing firebase_uuid for user");
                     user.setFirebaseUuid(firebaseUuid);
                     userRepository.update(user);
                 }

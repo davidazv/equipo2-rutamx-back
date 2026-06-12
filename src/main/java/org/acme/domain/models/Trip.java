@@ -10,7 +10,9 @@ public class Trip {
     private String tripShortName;
     private Byte directionId;
 
-    public Trip() {}
+    public Trip() {
+        // intentionally empty
+    }
 
     public String getTripId() { return tripId; }
     public void setTripId(String tripId) { this.tripId = tripId; }

@@ -15,7 +15,9 @@ public class Calendar {
     private LocalDate startDate;
     private LocalDate endDate;
 
-    public Calendar() {}
+    public Calendar() {
+        // intentionally empty
+    }
 
     public String getServiceId() { return serviceId; }
     public void setServiceId(String serviceId) { this.serviceId = serviceId; }

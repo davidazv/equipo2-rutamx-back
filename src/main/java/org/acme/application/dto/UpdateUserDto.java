@@ -22,7 +22,9 @@ public class UpdateUserDto {
     @Positive
     private Long roleId;
 
-    public UpdateUserDto() {}
+    public UpdateUserDto() {
+        // intentionally empty
+    }
 
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }

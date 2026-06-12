@@ -10,7 +10,9 @@ public class Role {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public Role() {}
+    public Role() {
+        // intentionally empty
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

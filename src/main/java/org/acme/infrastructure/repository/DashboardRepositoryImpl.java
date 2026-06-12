@@ -22,8 +22,12 @@ import java.util.List;
 @ApplicationScoped
 public class DashboardRepositoryImpl implements DashboardRepository {
 
+    private final EntityManager entityManager;
+
     @Inject
-    EntityManager entityManager;
+    public DashboardRepositoryImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     public CmoDashboard getCmoDashboard(String agencyId) {

@@ -10,7 +10,6 @@ import org.acme.application.usecase.CalculateFuelSavingsUseCase;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.util.logging.Logger;
@@ -33,12 +32,10 @@ public class FuelSavingsResource {
     @GET
     @Operation(summary = "Calcular ahorro en combustible",
         description = "Proyecta el ahorro económico y en litros de combustible al sustituir buses diésel por el modelo eléctrico especificado. Página: /admin/fleet | /ceo/fleet > pestaña Fleet Analytics. **Roles:** ADMIN, CEO, COO")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Proyección de ahorro calculada"),
-        @APIResponse(responseCode = "400", description = "Parámetros inválidos o faltantes"),
-        @APIResponse(responseCode = "404", description = "Ruta o modelo de bus no encontrado"),
-        @APIResponse(responseCode = "500", description = "Error inesperado")
-    })
+    @APIResponse(responseCode = "200", description = "Proyección de ahorro calculada")
+    @APIResponse(responseCode = "400", description = "Parámetros inválidos o faltantes")
+    @APIResponse(responseCode = "404", description = "Ruta o modelo de bus no encontrado")
+    @APIResponse(responseCode = "500", description = "Error inesperado")
     public Response getFuelSavings(
             @Parameter(description = "ID de la ruta (GTFS route_id)", required = true, example = "MB-1")
             @QueryParam("routeId") String routeId,

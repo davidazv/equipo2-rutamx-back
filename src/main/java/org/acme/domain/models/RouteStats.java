@@ -14,7 +14,9 @@ public class RouteStats {
     private double avgDailyTrips;
     private int headwayMinutes;
 
-    public RouteStats() {}
+    public RouteStats() {
+        // intentionally empty
+    }
 
     public String getRouteId() { return routeId; }
     public void setRouteId(String routeId) { this.routeId = routeId; }

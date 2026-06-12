@@ -30,7 +30,9 @@ public class AfluenciaMetrobusEntity {
     @Column(name = "afluencia", nullable = false, precision = 12, scale = 2)
     private BigDecimal afluencia;
 
-    public AfluenciaMetrobusEntity() {}
+    public AfluenciaMetrobusEntity() {
+        // intentionally empty
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

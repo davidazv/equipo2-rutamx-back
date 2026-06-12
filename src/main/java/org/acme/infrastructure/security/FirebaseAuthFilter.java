@@ -38,7 +38,8 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
         String method = requestContext.getMethod();
 
         // Endpoints restricted to authenticated roles (CMO, CEO, COO, ADMIN)
-        boolean requiresRoleAuth = path.startsWith("/api/co2-savings")
+        boolean requiresRoleAuth = path.startsWith("/api/me")
+                || path.startsWith("/api/co2-savings")
                 || path.startsWith("/api/routes/trips-by-day")
                 || path.startsWith("/api/reports")
                 || path.startsWith("/api/cmo");

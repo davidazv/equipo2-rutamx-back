@@ -49,6 +49,7 @@ public class UserResource {
 
     private static final String ADMIN_ONLY = "Solo el rol ADMIN";
     private static final String ERROR_INESPERADO = "Error inesperado";
+    private static final String USUARIO_NO_ENCONTRADO = "Usuario no encontrado";
 
     private final CreateUserUseCase createUserUseCase;
     private final UpdateUserUseCase updateUserUseCase;
@@ -128,7 +129,7 @@ public class UserResource {
         return userRepository.findById(id)
                 .map(u -> Response.ok(u).build())
                 .orElse(Response.status(Response.Status.NOT_FOUND)
-                        .entity("Usuario no encontrado").build());
+                        .entity(USUARIO_NO_ENCONTRADO).build());
     }
 
     @POST
@@ -172,7 +173,7 @@ public class UserResource {
             return Response.ok(updateUserUseCase.execute(id, dto)).build();
         } catch (UserNotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Usuario no encontrado")
+                    .entity(USUARIO_NO_ENCONTRADO)
                     .build();
         } catch (Exception e) {
             log.log(java.util.logging.Level.SEVERE, "Unexpected error updating user: {0}", e.getMessage());
@@ -196,7 +197,7 @@ public class UserResource {
             return Response.noContent().build();
         } catch (UserNotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Usuario no encontrado")
+                    .entity(USUARIO_NO_ENCONTRADO)
                     .build();
         } catch (IllegalArgumentException e) {
             log.log(java.util.logging.Level.WARNING, "Invalid argument deleting user: {0}", e.getMessage());
@@ -224,7 +225,7 @@ public class UserResource {
             return Response.ok(activateUserUseCase.execute(id)).build();
         } catch (UserNotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Usuario no encontrado")
+                    .entity(USUARIO_NO_ENCONTRADO)
                     .build();
         } catch (UserAlreadyActiveException e) {
             return Response.status(Response.Status.CONFLICT)
@@ -252,7 +253,7 @@ public class UserResource {
             return Response.ok(suspendUserUseCase.execute(id)).build();
         } catch (UserNotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Usuario no encontrado")
+                    .entity(USUARIO_NO_ENCONTRADO)
                     .build();
         } catch (UserAlreadySuspendedException e) {
             return Response.status(Response.Status.CONFLICT)
@@ -288,7 +289,7 @@ public class UserResource {
             return Response.noContent().build();
         } catch (UserNotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Usuario no encontrado")
+                    .entity(USUARIO_NO_ENCONTRADO)
                     .build();
         } catch (Exception e) {
             log.log(java.util.logging.Level.SEVERE, "Unexpected error resetting password: {0}", e.getMessage());

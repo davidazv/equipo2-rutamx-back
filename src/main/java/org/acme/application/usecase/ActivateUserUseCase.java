@@ -27,7 +27,7 @@ public class ActivateUserUseCase {
     }
 
     public User execute(Long id) {
-        log.info("Activating user id: " + id);
+        log.log(java.util.logging.Level.INFO, "Activating user id: {0}", id);
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
@@ -39,8 +39,8 @@ public class ActivateUserUseCase {
         try {
             firebaseUserCreator.enableUser(user.getFirebaseUuid());
         } catch (Exception e) {
-            log.warning("Error enabling user in Firebase: " + e.getMessage());
-            throw new RuntimeException("Error al activar usuario en Firebase", e);
+            log.log(java.util.logging.Level.WARNING, "Error enabling user in Firebase: {0}", e.getMessage());
+            throw new IllegalStateException("Error al activar usuario en Firebase", e);
         }
 
         user.setStatus(UserStatus.ACTIVE);

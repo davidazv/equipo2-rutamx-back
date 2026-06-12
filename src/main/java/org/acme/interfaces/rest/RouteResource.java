@@ -18,7 +18,6 @@ import org.acme.domain.repository.RouteRepository;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.util.logging.Logger;
@@ -74,16 +73,14 @@ public class RouteResource {
     @Path("/travel-times")
     @Operation(summary = "Tiempos de recorrido por ruta",
         description = "Calcula el tiempo promedio de viaje para cada ruta. Página: /admin/fleet | /coo/fleet > pestaña Tiempos de Viaje. **Roles:** ADMIN, COO")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Tiempos de recorrido por ruta"),
-        @APIResponse(responseCode = "500", description = "Error al calcular tiempos")
-    })
+    @APIResponse(responseCode = "200", description = "Tiempos de recorrido por ruta")
+    @APIResponse(responseCode = "500", description = "Error al calcular tiempos")
     public Response listRouteTravelTimes() {
-        log.info("GET /api/routes/travel-times");
+        log.log(java.util.logging.Level.INFO, "GET /api/routes/travel-times");
         try {
             return Response.ok(getTravelTimesUseCase.execute()).build();
         } catch (Exception e) {
-            log.severe("Error listing travel times: " + e.getMessage());
+            log.log(java.util.logging.Level.SEVERE, "Error listing travel times: {0}", e.getMessage());
             return Response.serverError().entity("Error al obtener tiempos de recorrido").build();
         }
     }
@@ -92,20 +89,18 @@ public class RouteResource {
     @Path("/trips-by-day")
     @Operation(summary = "Viajes por día de la semana",
         description = "Devuelve el número de viajes agrupados por día según el calendario GTFS. Página: /admin/dashboard | /ceo/dashboard | /coo/dashboard. **Roles:** ADMIN, CEO, COO")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Viajes agrupados por día"),
-        @APIResponse(responseCode = "404", description = "No hay datos GTFS cargados"),
-        @APIResponse(responseCode = "500", description = "Error inesperado")
-    })
+    @APIResponse(responseCode = "200", description = "Viajes agrupados por día")
+    @APIResponse(responseCode = "404", description = "No hay datos GTFS cargados")
+    @APIResponse(responseCode = "500", description = "Error inesperado")
     public Response listTripsByDay() {
-        log.info("GET /api/routes/trips-by-day");
+        log.log(java.util.logging.Level.INFO, "GET /api/routes/trips-by-day");
         try {
             return Response.ok(getTripsByDayUseCase.execute()).build();
         } catch (NoGtfsDataException e) {
-            log.warning("No GTFS data: " + e.getMessage());
+            log.log(java.util.logging.Level.WARNING, "No GTFS data: {0}", e.getMessage());
             return Response.status(Response.Status.NOT_FOUND).entity("Datos GTFS no disponibles").build();
         } catch (Exception e) {
-            log.severe("Error listing trips by day: " + e.getMessage());
+            log.log(java.util.logging.Level.SEVERE, "Error listing trips by day: {0}", e.getMessage());
             return Response.serverError().entity("Error inesperado al obtener viajes por día").build();
         }
     }
@@ -114,10 +109,8 @@ public class RouteResource {
     @Path("/{routeId}")
     @Operation(summary = "Obtener ruta por ID",
         description = "Página: detalle de ruta en mapa (/[rol]/map). **Roles:** ADMIN, CEO, COO, CMO")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Ruta encontrada"),
-        @APIResponse(responseCode = "404", description = "Ruta no encontrada")
-    })
+    @APIResponse(responseCode = "200", description = "Ruta encontrada")
+    @APIResponse(responseCode = "404", description = "Ruta no encontrada")
     public Response getRoute(
             @Parameter(description = "ID de la ruta (GTFS route_id)", required = true, example = "MB-1")
             @PathParam("routeId") @Size(max = 50)
@@ -132,11 +125,9 @@ public class RouteResource {
     @Path("/{routeId}/bus-model-recommendation")
     @Operation(summary = "Recomendación de modelo de bus para una ruta",
         description = "Calcula el modelo de bus eléctrico más adecuado según distancia y ocupación objetivo. Página: /[rol]/map > pestaña Optimización de Flota. **Roles:** ADMIN, CEO, COO, CMO")
-    @APIResponses({
-        @APIResponse(responseCode = "200", description = "Recomendación generada"),
-        @APIResponse(responseCode = "404", description = "Ruta no encontrada o sin datos de demanda"),
-        @APIResponse(responseCode = "500", description = "Error al generar recomendación")
-    })
+    @APIResponse(responseCode = "200", description = "Recomendación generada")
+    @APIResponse(responseCode = "404", description = "Ruta no encontrada o sin datos de demanda")
+    @APIResponse(responseCode = "500", description = "Error al generar recomendación")
     public Response getBusModelRecommendation(
             @Parameter(description = "ID de la ruta (GTFS route_id)", required = true, example = "MB-1")
             @PathParam("routeId") @Size(max = 50)
@@ -144,18 +135,17 @@ public class RouteResource {
             @Parameter(description = "Ocupación objetivo como fracción (0.0–1.0)", example = "0.80")
             @QueryParam("targetOccupancy") @DefaultValue("0.80")
             @DecimalMin("0.0") @DecimalMax("1.0") double targetOccupancy) {
-        log.info("GET /api/routes/" + routeId + "/bus-model-recommendation"
-                + " targetOccupancy=" + targetOccupancy);
+        log.log(java.util.logging.Level.INFO, "GET /api/routes/bus-model-recommendation targetOccupancy={0}", targetOccupancy);
         try {
             return Response.ok(recommendBusModelUseCase.execute(routeId, targetOccupancy)).build();
         } catch (RouteNotFoundException e) {
-            log.warning("Route not found: " + e.getMessage());
+            log.log(java.util.logging.Level.WARNING, "Route not found: {0}", e.getMessage());
             return Response.status(Response.Status.NOT_FOUND).entity("Ruta no encontrada").build();
         } catch (NoDemandDataException e) {
-            log.warning("No demand data: " + e.getMessage());
+            log.log(java.util.logging.Level.WARNING, "No demand data: {0}", e.getMessage());
             return Response.status(Response.Status.NOT_FOUND).entity("Sin datos de demanda para la ruta").build();
         } catch (Exception e) {
-            log.severe("Error generating bus model recommendation: " + e.getMessage());
+            log.log(java.util.logging.Level.SEVERE, "Error generating bus model recommendation: {0}", e.getMessage());
             return Response.serverError().entity("Error al generar recomendación de modelo").build();
         }
     }

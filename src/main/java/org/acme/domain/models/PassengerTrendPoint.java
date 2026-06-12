@@ -5,7 +5,9 @@ public class PassengerTrendPoint {
     private String day;
     private double avgPassengers;
 
-    public PassengerTrendPoint() {}
+    public PassengerTrendPoint() {
+        // intentionally empty
+    }
 
     public PassengerTrendPoint(String day, double avgPassengers) {
         this.day = day;

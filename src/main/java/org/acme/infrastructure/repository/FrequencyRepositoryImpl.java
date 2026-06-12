@@ -13,13 +13,16 @@ import org.acme.infrastructure.mapper.FrequencyMapper;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class FrequencyRepositoryImpl implements FrequencyRepository {
 
+    private final EntityManager entityManager;
+
     @Inject
-    EntityManager entityManager;
+    public FrequencyRepositoryImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     @Transactional
@@ -34,7 +37,7 @@ public class FrequencyRepositoryImpl implements FrequencyRepository {
                 .getResultList()
                 .stream()
                 .map(FrequencyMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

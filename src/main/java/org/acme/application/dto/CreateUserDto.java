@@ -30,7 +30,9 @@ public class CreateUserDto {
     @NotNull
     private Long roleId;
 
-    public CreateUserDto() {}
+    public CreateUserDto() {
+        // intentionally empty
+    }
 
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }

@@ -21,6 +21,10 @@ public class TestFirebaseAuthFilter extends FirebaseAuthFilter {
     @Inject
     AuthContext authContext;
 
+    public TestFirebaseAuthFilter() {
+        super(null, null, null);
+    }
+
     @Override
     public void filter(ContainerRequestContext ctx) {
         String path = ctx.getUriInfo().getPath();

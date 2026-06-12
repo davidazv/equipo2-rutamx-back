@@ -13,6 +13,7 @@ public class AfluenciaMetrobus {
     private BigDecimal afluencia;
 
     public AfluenciaMetrobus() {
+        // intentionally empty
     }
 
     public LocalDate getFecha() {

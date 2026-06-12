@@ -62,8 +62,8 @@ public class EstimateRoiUseCase {
                 ? totalInvestmentMXN / netAnnualReturn
                 : 0;
 
-        log.info("ROI estimado para ruta=" + routeId + " modelo=" + busModelId
-                + " buses=" + numberOfBuses + ": " + String.format("%.1f%%", roiPercent));
+        log.log(java.util.logging.Level.INFO, "ROI estimado: buses={0}, roi={1}",
+                new Object[]{numberOfBuses, String.format("%.1f%%", roiPercent)});
 
         RoiEstimate estimate = new RoiEstimate();
         estimate.setRoiPercent(roiPercent);

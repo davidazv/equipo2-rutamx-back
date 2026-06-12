@@ -5,7 +5,9 @@ public class HourlyBusDemand {
     private int hour;
     private int busesRequired;
 
-    public HourlyBusDemand() {}
+    public HourlyBusDemand() {
+        // intentionally empty
+    }
 
     public HourlyBusDemand(int hour, int busesRequired) {
         this.hour = hour;

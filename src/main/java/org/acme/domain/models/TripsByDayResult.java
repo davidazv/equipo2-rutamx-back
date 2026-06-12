@@ -16,7 +16,9 @@ public class TripsByDayResult {
     private Double demandaDiariaPromedio;
     private String calidadDatos;
 
-    public TripsByDayResult() {}
+    public TripsByDayResult() {
+        // intentionally empty
+    }
 
     public String getRouteId() { return routeId; }
     public void setRouteId(String routeId) { this.routeId = routeId; }

@@ -9,6 +9,7 @@ public class Frequency {
     private Byte exactTimes;
 
     public Frequency() {
+        // intentionally empty
     }
 
     public String getTripId() {

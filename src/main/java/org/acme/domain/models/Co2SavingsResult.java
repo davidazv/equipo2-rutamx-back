@@ -16,7 +16,9 @@ public class Co2SavingsResult {
     private String prioridad;
     private Map<String, DetallesDia> detallesPorDia;
 
-    public Co2SavingsResult() {}
+    public Co2SavingsResult() {
+        // intentionally empty
+    }
 
     public String getRouteId() { return routeId; }
     public void setRouteId(String routeId) { this.routeId = routeId; }

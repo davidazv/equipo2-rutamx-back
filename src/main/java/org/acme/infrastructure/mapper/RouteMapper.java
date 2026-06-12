@@ -2,7 +2,6 @@ package org.acme.infrastructure.mapper;
 
 import org.acme.domain.models.Route;
 import org.acme.infrastructure.entities.RouteEntity;
-import org.acme.infrastructure.entities.AgencyEntity;
 
 public class RouteMapper {
 

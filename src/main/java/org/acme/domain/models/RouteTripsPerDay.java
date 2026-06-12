@@ -15,7 +15,9 @@ public class RouteTripsPerDay {
     private int saturday;
     private int sunday;
 
-    public RouteTripsPerDay() {}
+    public RouteTripsPerDay() {
+        // intentionally empty
+    }
 
     public String getRouteId() { return routeId; }
     public void setRouteId(String routeId) { this.routeId = routeId; }

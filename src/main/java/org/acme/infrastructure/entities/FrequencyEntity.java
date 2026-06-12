@@ -26,7 +26,9 @@ public class FrequencyEntity {
     @Column(name = "exact_times")
     private Byte exactTimes;
 
-    public FrequencyEntity() {}
+    public FrequencyEntity() {
+        // intentionally empty
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

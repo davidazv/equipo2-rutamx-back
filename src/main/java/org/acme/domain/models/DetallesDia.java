@@ -5,7 +5,9 @@ public class DetallesDia {
     private Integer viajes;
     private Double pasajeros;
 
-    public DetallesDia() {}
+    public DetallesDia() {
+        // intentionally empty
+    }
 
     public DetallesDia(Integer viajes, Double pasajeros) {
         this.viajes = viajes;

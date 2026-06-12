@@ -11,7 +11,9 @@ public class Route {
     private String routeTextColor;
     private Double distanceKm;
 
-    public Route() {}
+    public Route() {
+        // intentionally empty
+    }
 
     public String getRouteId() { return routeId; }
     public void setRouteId(String routeId) { this.routeId = routeId; }

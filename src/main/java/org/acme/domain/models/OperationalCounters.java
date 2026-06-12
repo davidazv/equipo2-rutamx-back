@@ -8,7 +8,9 @@ public class OperationalCounters {
     private long totalShapes;
     private double avgFrequencyMin;
 
-    public OperationalCounters() {}
+    public OperationalCounters() {
+        // intentionally empty
+    }
 
     public long getTotalRoutes() { return totalRoutes; }
     public void setTotalRoutes(long totalRoutes) { this.totalRoutes = totalRoutes; }

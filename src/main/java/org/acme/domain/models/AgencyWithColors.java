@@ -11,7 +11,9 @@ public class AgencyWithColors {
     private boolean multiColor;
     private int routeCount;
 
-    public AgencyWithColors() {}
+    public AgencyWithColors() {
+        // intentionally empty
+    }
 
     public String getAgencyId() { return agencyId; }
     public void setAgencyId(String agencyId) { this.agencyId = agencyId; }

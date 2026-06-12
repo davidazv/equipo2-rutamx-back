@@ -62,9 +62,8 @@ public class GetKpiMetricsUseCase {
         metrics.setTotalCo2AvoidedTons(totalCo2);
         metrics.setRoutesAnalyzed(routes.size());
 
-        log.info("KPI metrics computed: " + routes.size() + " routes, "
-                + electricModels.size() + " electric models, "
-                + busesPerRoute + " buses/route");
+        log.log(java.util.logging.Level.INFO, "KPI metrics computed: {0} routes, {1} electric models, {2} buses/route",
+                new Object[]{routes.size(), electricModels.size(), busesPerRoute});
 
         return metrics;
     }

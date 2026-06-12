@@ -31,7 +31,7 @@ public class SuspendUserUseCase {
     }
 
     public User execute(Long id) {
-        log.info("Suspending user id: " + id);
+        log.log(java.util.logging.Level.INFO, "Suspending user id: {0}", id);
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
@@ -48,8 +48,8 @@ public class SuspendUserUseCase {
         try {
             firebaseUserCreator.disableUser(user.getFirebaseUuid());
         } catch (Exception e) {
-            log.warning("Error disabling user in Firebase: " + e.getMessage());
-            throw new RuntimeException("Error al suspender usuario en Firebase", e);
+            log.log(java.util.logging.Level.WARNING, "Error disabling user in Firebase: {0}", e.getMessage());
+            throw new IllegalStateException("Error al suspender usuario en Firebase", e);
         }
 
         user.setStatus(UserStatus.SUSPENDED);

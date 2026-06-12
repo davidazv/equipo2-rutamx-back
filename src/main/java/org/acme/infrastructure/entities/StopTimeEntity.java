@@ -30,7 +30,9 @@ public class StopTimeEntity {
     @Column(name = "timepoint")
     private Byte timepoint;
 
-    public StopTimeEntity() {}
+    public StopTimeEntity() {
+        // intentionally empty
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

@@ -5,7 +5,9 @@ public class HourlyOccupancy {
     private int hour;
     private double occupancyPct;
 
-    public HourlyOccupancy() {}
+    public HourlyOccupancy() {
+        // intentionally empty
+    }
 
     public HourlyOccupancy(int hour, double occupancyPct) {
         this.hour = hour;

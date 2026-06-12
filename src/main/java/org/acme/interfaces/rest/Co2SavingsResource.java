@@ -54,7 +54,7 @@ public class Co2SavingsResource {
             return Response.status(Response.Status.BAD_REQUEST).entity("Modelo de autobús no encontrado").build();
         } catch (IllegalArgumentException e) {
             log.warning("Invalid argument calculating CO2 savings: " + e.getMessage());
-            return Response.status(Response.Status.BAD_REQUEST).entity("Parámetros inválidos").build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (NoGtfsDataException e) {
             log.warning("No GTFS data: " + e.getMessage());
             return Response.status(Response.Status.NOT_FOUND).entity("Datos GTFS no disponibles").build();

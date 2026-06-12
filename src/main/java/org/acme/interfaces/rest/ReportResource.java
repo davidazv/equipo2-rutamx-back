@@ -104,7 +104,7 @@ public class ReportResource {
             return Response.status(Response.Status.NOT_FOUND).entity("Modelo de autobús no encontrado").build();
         } catch (IllegalArgumentException e) {
             log.warning("Invalid argument generating comparative report: " + e.getMessage());
-            return Response.status(Response.Status.BAD_REQUEST).entity("Parámetros inválidos").build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (Exception e) {
             log.severe("Error inesperado generando reporte comparativo: " + e.getMessage());
             return Response.serverError().entity("Error inesperado").build();

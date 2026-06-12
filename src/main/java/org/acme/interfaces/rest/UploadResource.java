@@ -32,16 +32,27 @@ public class UploadResource {
 
     private static final String ERROR_INESPERADO = "Error al procesar el archivo";
 
+    private static final String KEY_AGENCY      = "agency";
+    private static final String KEY_CALENDAR    = "calendar";
+    private static final String KEY_STOPS       = "stops";
+    private static final String KEY_BUS_MODELS  = "bus-models";
+    private static final String KEY_SHAPES      = "shapes";
+    private static final String KEY_AFLUENCIA   = "afluencia";
+    private static final String KEY_ROUTES      = "routes";
+    private static final String KEY_TRIPS       = "trips";
+    private static final String KEY_STOP_TIMES  = "stop-times";
+    private static final String KEY_FREQUENCIES = "frequencies";
+
     // Whitelist of physical table names countTable() may query. Prevents SQL
     // injection via dynamic table name interpolation in native queries.
     private static final Set<String> ALLOWED_COUNT_TABLES = Set.of(
-            "agency", "calendar", "stops", "bus_models", "shapes",
-            "afluencia_metrobus", "routes", "trips", "stop_times", "frequencies");
+            KEY_AGENCY, KEY_CALENDAR, KEY_STOPS, "bus_models", KEY_SHAPES,
+            "afluencia_metrobus", KEY_ROUTES, KEY_TRIPS, "stop_times", KEY_FREQUENCIES);
 
     // Whitelist of logical keys executeUpload() may record in upload_metadata.
     private static final Set<String> ALLOWED_UPLOAD_KEYS = Set.of(
-            "agency", "calendar", "stops", "bus-models", "shapes",
-            "afluencia", "routes", "trips", "stop-times", "frequencies");
+            KEY_AGENCY, KEY_CALENDAR, KEY_STOPS, KEY_BUS_MODELS, KEY_SHAPES,
+            KEY_AFLUENCIA, KEY_ROUTES, KEY_TRIPS, KEY_STOP_TIMES, KEY_FREQUENCIES);
 
     private final EntityManager entityManager;
     private final ImportAgencyUseCase importAgencyUseCase;
@@ -93,7 +104,7 @@ public class UploadResource {
         content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
             schema = @Schema(implementation = UploadForm.class)))
     public Response uploadAgency(@MultipartForm UploadForm form) {
-        return executeUpload("agency", form, importAgencyUseCase::execute);
+        return executeUpload(KEY_AGENCY, form, importAgencyUseCase::execute);
     }
 
     @POST
@@ -108,7 +119,7 @@ public class UploadResource {
         content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
             schema = @Schema(implementation = UploadForm.class)))
     public Response uploadBusModels(@MultipartForm UploadForm form) {
-        return executeUpload("bus-models", form, importBusModelUseCase::execute);
+        return executeUpload(KEY_BUS_MODELS, form, importBusModelUseCase::execute);
     }
 
     @POST
@@ -123,7 +134,7 @@ public class UploadResource {
         content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
             schema = @Schema(implementation = UploadForm.class)))
     public Response uploadCalendar(@MultipartForm UploadForm form) {
-        return executeUpload("calendar", form, importCalendarUseCase::execute);
+        return executeUpload(KEY_CALENDAR, form, importCalendarUseCase::execute);
     }
 
     @POST
@@ -138,7 +149,7 @@ public class UploadResource {
         content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
             schema = @Schema(implementation = UploadForm.class)))
     public Response uploadRoutes(@MultipartForm UploadForm form) {
-        return executeUpload("routes", form, importRouteUseCase::execute);
+        return executeUpload(KEY_ROUTES, form, importRouteUseCase::execute);
     }
 
     @POST
@@ -153,7 +164,7 @@ public class UploadResource {
         content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
             schema = @Schema(implementation = UploadForm.class)))
     public Response uploadStops(@MultipartForm UploadForm form) {
-        return executeUpload("stops", form, importStopUseCase::execute);
+        return executeUpload(KEY_STOPS, form, importStopUseCase::execute);
     }
 
     @POST
@@ -168,7 +179,7 @@ public class UploadResource {
         content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
             schema = @Schema(implementation = UploadForm.class)))
     public Response uploadTrips(@MultipartForm UploadForm form) {
-        return executeUpload("trips", form, importTripUseCase::execute);
+        return executeUpload(KEY_TRIPS, form, importTripUseCase::execute);
     }
 
     @POST
@@ -183,7 +194,7 @@ public class UploadResource {
         content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
             schema = @Schema(implementation = UploadForm.class)))
     public Response uploadStopTimes(@MultipartForm UploadForm form) {
-        return executeUpload("stop-times", form, importStopTimeUseCase::execute);
+        return executeUpload(KEY_STOP_TIMES, form, importStopTimeUseCase::execute);
     }
 
     @POST
@@ -198,7 +209,7 @@ public class UploadResource {
         content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
             schema = @Schema(implementation = UploadForm.class)))
     public Response uploadShapes(@MultipartForm UploadForm form) {
-        return executeUpload("shapes", form, importShapeUseCase::execute);
+        return executeUpload(KEY_SHAPES, form, importShapeUseCase::execute);
     }
 
     @POST
@@ -213,7 +224,7 @@ public class UploadResource {
         content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
             schema = @Schema(implementation = UploadForm.class)))
     public Response uploadFrequencies(@MultipartForm UploadForm form) {
-        return executeUpload("frequencies", form, importFrequencyUseCase::execute);
+        return executeUpload(KEY_FREQUENCIES, form, importFrequencyUseCase::execute);
     }
 
     @POST
@@ -228,7 +239,7 @@ public class UploadResource {
         content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
             schema = @Schema(implementation = UploadForm.class)))
     public Response uploadAfluencia(@MultipartForm UploadForm form) {
-        return executeUpload("afluencia", form, importAfluenciaUseCase::execute);
+        return executeUpload(KEY_AFLUENCIA, form, importAfluenciaUseCase::execute);
     }
 
     @GET
@@ -237,10 +248,10 @@ public class UploadResource {
         description = "Devuelve el conteo de filas y la fecha de última importación de cada tabla. Página: Admin Panel > Carga de Datos. **Roles:** ADMIN")
     @APIResponse(responseCode = "200", description = "Estado actual de cada tabla de datos")
     public Response getTableStatus() {
-        String[] keys = {"agency", "calendar", "stops", "bus-models", "shapes",
-                "afluencia", "routes", "trips", "stop-times", "frequencies"};
-        String[] dbTables = {"agency", "calendar", "stops", "bus_models", "shapes",
-                "afluencia_metrobus", "routes", "trips", "stop_times", "frequencies"};
+        String[] keys = {KEY_AGENCY, KEY_CALENDAR, KEY_STOPS, KEY_BUS_MODELS, KEY_SHAPES,
+                KEY_AFLUENCIA, KEY_ROUTES, KEY_TRIPS, KEY_STOP_TIMES, KEY_FREQUENCIES};
+        String[] dbTables = {KEY_AGENCY, KEY_CALENDAR, KEY_STOPS, "bus_models", KEY_SHAPES,
+                "afluencia_metrobus", KEY_ROUTES, KEY_TRIPS, "stop_times", KEY_FREQUENCIES};
 
         Map<String, String> timestamps = loadTimestamps();
 
